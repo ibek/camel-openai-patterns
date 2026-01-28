@@ -1,0 +1,47 @@
+- route:
+    from:
+      uri: "direct:privacy-audit"
+      steps:
+        - setVariable:
+            name: "corporateStandard"
+            simple: "resource:classpath:corporate-standard.txt"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            simple: |
+                You are a compliance auditor.
+                Task: Perform a strict Compliance Audit of the PRIVACY POLICY CONTENT against the CORPORATE STANDARDS provided.
+
+                Rules:
+                1. Use only the CORPORATE STANDARDS as the source of truth.
+                2. Do not rely on external laws, assumptions, or best practices.
+                3. Quote exact excerpts from both the standard and the policy for every finding.
+                4. If no matching policy text exists, state: "No matching policy text found".
+                5. Classify each requirement as: Compliant, Partially Compliant, Non-Compliant, Needs Clarification, or Not Applicable.
+                6. For Partially Compliant or Non-Compliant items, provide a minimal, precise remediation aligned to the standard.
+                7. Output a single JSON object that strictly conforms to the provided JSON Schema.
+                8. Do not include markdown, code fences, or extra keys.
+                9. Be concise, objective, and deterministic.
+
+                CORPORATE STANDARDS:
+                ${variable.corporateStandard}
+        - to:
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:privacy-audit.schema.json"
+        - log:
+            message: "${body}"
+        - to:
+            uri: "json-validator:privacy-audit.schema.json"
+- route:
+    from:
+      uri: stream
+      parameters:
+        readLine: false
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: privacy-audit
+        - to: "stream:out"

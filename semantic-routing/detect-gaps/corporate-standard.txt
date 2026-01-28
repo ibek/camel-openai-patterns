@@ -1,0 +1,6 @@
+
+STANDARD 1 (DPO_CONTACT): Must explicitly provide an email address for a Data Privacy Officer.
+STANDARD 2 (DATA_RETENTION): Must specify exact retention periods (e.g., "12 months") or explicit "indefinite" logic.
+STANDARD 3 (COOKIES): Must declare use of cookies or explicitly state "no cookies used".
+STANDARD 4 (THIRD_PARTY_SHARING): Must list specific 3rd party processors (e.g., Google, Azure).
+STANDARD 5 (USER_RIGHTS): Must mention "Right to be Forgotten" or "Erasure".

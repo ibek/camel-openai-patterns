@@ -1,0 +1,33 @@
+- route:
+    from:
+      uri: "direct:triage-ticket"
+      steps:
+        - setVariable:
+            name: "riskRubric"
+            simple: "resource:classpath:risk-rubric.txt"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            expression:
+              simple: |
+                You are a Security Operations Center AI.
+
+                Task: Analyze the user's intent and assign the score and category based strictly on the provided rubric.
+
+                ${variable.riskRubric}
+        - to:
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:ticket-risk.schema.json"
+
+- route:
+    from:
+      uri: stream
+      parameters:
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: triage-ticket
+        - to: "stream:out"

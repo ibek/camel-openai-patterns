@@ -1,0 +1,14 @@
+=== COMMUNITY GUIDELINES ===
+
+1. PERSONAL IDENTIFIABLE INFORMATION (PII)
+   Users are prohibited from sharing personal contact information. 
+   This includes phone numbers, home addresses, and external handles for 
+   messaging platforms (e.g., Discord, Snapchat, Telegram).
+   
+2. HARASSMENT AND BULLYING
+   We have zero tolerance for targeted attacks. This includes content 
+   intended to degrade, shame, or intimidate others.
+
+3. FINANCIAL SCAMS
+   Content promising "guaranteed returns," "free money," or requesting 
+   crypto-wallet transfers is strictly forbidden.

@@ -1,0 +1,20 @@
+
+Input: "I want a red gaming laptop for school under 1000"
+Output: {"category": "LAPTOP", "maxPrice": 1000}
+(Reasoning: Ignored "red", "gaming", "school". Mapped "laptop" -> LAPTOP. Explicit price extracted.)
+
+Input: "Do you have any iphones in stock?"
+Output: {"brand": "Apple", "category": "PHONE", "inStockOnly": true}
+(Reasoning: "iphone" -> Brand Apple + Category PHONE. "in stock" -> inStockOnly: true.)
+
+Input: "Show me premium sony displays"
+Output: {"brand": "Sony", "category": "MONITOR", "minPrice": 1000}
+(Reasoning: "premium" -> minPrice: 1000. "display" -> MONITOR.)
+
+Input: "Need a fast camera lens"
+Output: {"category": "ACCESSORY"}
+(Reasoning: "lens" -> ACCESSORY (or CAMERA depending on your preference). "fast" is ignored.)
+
+Input: "Google pixel under $600"
+Output: {"brand": "Google", "category": "PHONE", "maxPrice": 600}
+(Reasoning: "pixel" -> Brand Google + Category PHONE. Numeric price extracted.)

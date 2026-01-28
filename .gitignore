@@ -1,0 +1,39 @@
+# Camel JBang
+.camel-jbang/
+
+# Data directories (processed files)
+data/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+target/
+build/
+*.class
+*.jar
+
+# Temporary files
+*.tmp
+*.swp
+*~

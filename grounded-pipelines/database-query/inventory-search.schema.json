@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "category": {
+            "type": "string",
+            "enum": [
+                "LAPTOP",
+                "PHONE",
+                "CAMERA",
+                "ACCESSORY",
+                "MONITOR"
+            ],
+            "description": "The product category. Extract high-level types here (e.g., 'notebook' -> 'LAPTOP')."
+        },
+        "brand": {
+            "type": "string",
+            "description": "The brand name (e.g., 'Sony', 'Dell')."
+        },
+        "maxPrice": {
+            "type": "number",
+            "description": "The numeric maximum price limit from terms like 'under $500', 'cheap', 'budget'."
+        },
+        "minPrice": {
+            "type": "number",
+            "description": "The numeric minimum price limit from terms like 'over $100', 'premium'."
+        },
+        "inStockOnly": {
+            "type": "boolean",
+            "description": "True if the user explicitly asks for availability (e.g. 'in stock', 'ready to ship')."
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

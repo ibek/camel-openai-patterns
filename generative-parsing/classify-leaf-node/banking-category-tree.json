@@ -1,0 +1,77 @@
+{
+    "Security_and_Access": {
+        "Fraud_and_Disputes": [
+            "Report_Lost_or_Stolen_Card",
+            "Dispute_Transaction",
+            "Unrecognized_Charge",
+            "Identity_Theft_Suspect"
+        ],
+        "Login_and_Tech_Support": [
+            "Password_Reset",
+            "Username_Recovery",
+            "Device_Authentication_Issue",
+            "Mobile_App_Support"
+        ]
+    },
+    "Money_Movement": {
+        "Transfers_and_Payments": [
+            "Wire_Transfer",
+            "Zelle_P2P_Issue",
+            "Bill_Pay_Setup_or_Issue",
+            "Internal_Transfer",
+            "Stop_Payment_Request"
+        ],
+        "Deposits": [
+            "Mobile_Check_Deposit",
+            "Direct_Deposit_Setup",
+            "ATM_Deposit_Issue"
+        ]
+    },
+    "Account_Management": {
+        "General_Inquiries": [
+            "Balance_Inquiry",
+            "Transaction_History",
+            "Statement_Request",
+            "Fee_Reversal_Request",
+            "Update_Contact_Info"
+        ],
+        "Card_Services_Non_Fraud": [
+            "Activate_Card",
+            "PIN_Reset",
+            "Travel_Notification",
+            "Rewards_Redemption",
+            "Credit_Limit_Increase",
+            "Transaction_Decline_or_Failure"
+        ],
+        "Overdraft_and_Limits": [
+            "Overdraft_Protection",
+            "Withdrawal_Limit_Increase"
+        ]
+    },
+    "Lending_Services": {
+        "Loan_Servicing": [
+            "Payoff_Quote",
+            "Make_Loan_Payment",
+            "Escrow_Inquiry",
+            "Title_Release"
+        ],
+        "Applications_and_Hardship": [
+            "Application_Status",
+            "Refinance_Inquiry",
+            "Payment_Assistance_Hardship"
+        ]
+    },
+    "Insurance_Services": {
+        "Claims": [
+            "File_New_Claim",
+            "Existing_Claim_Status",
+            "Adjuster_Contact"
+        ],
+        "Policy_Servicing": [
+            "Update_Coverage_or_Vehicle",
+            "Proof_of_Insurance",
+            "Billing_and_Renewals",
+            "Update_Beneficiary"
+        ]
+    }
+}

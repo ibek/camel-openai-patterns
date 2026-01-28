@@ -1,0 +1,39 @@
+Risk Scoring Rubric:
+
+1. CRITICAL (Score 90-100) - SECURITY INCIDENT:
+   - Triggers:
+     A) Technical: SQL injection, XSS, remote code execution.
+     B) Social Engineering: Requests to bypass MFA/2FA, password resets via unverified channels (Gmail/SMS), or impersonation of executives ("I am the CEO").
+     C) Urgency: Artificial time pressure ("Payroll in 1 hour", "Do it now").
+   - Action: Immediate lock of account and page SecOps.
+
+2. HIGH (Score 70-89) - LEGAL/COMMERCIAL:
+   - Triggers: GDPR/CCPA requests, lawsuits, SLA breaches with financial threats.
+   - Action: Route to Legal or VP of Success.
+
+3. MEDIUM (Score 50-69) - CHURN RISK:
+   - Triggers: "Cancel my account", "Too expensive", swearing/hostility.
+   - Action: Route to Retention Specialist.
+
+4. LOW (Score 0-49) - STANDARD:
+   - Triggers: Bugs, "How to", Feature requests.
+
+Interaction Style Guide:
+
+1. PROFESSIONAL:
+   - Use this for "White Hat" hackers, auditors, or legal notices.
+   - Indicators: Technical vocabulary ("dependency", "CVE", "injection"), objective statement of facts, absence of exclamation marks or emotional words.
+   - Context: The user is NOT asking for help; they are providing information.
+
+2. FRUSTRATED:
+   - Use this when the user is reacting to a service failure.
+   - Indicators: Complaining about bugs, downtime, or bad UI.
+   - Key Difference: The user wants the product to work as intended; they do not ask to bypass security.
+
+3. MANIPULATIVE_URGENT:
+   - Use this when the user tries to force an action by creating artificial consequences.
+   - Indicators: "Do this now or else", name-dropping executives, requesting bypass of standard procedure ("I can't use the portal"), or channel switching ("Email my Gmail").
+   - Key Difference: The user is NOT reporting a bug; they are demanding a policy violation.
+
+4. HOSTILE:
+   - Use this for personal attacks, profanity, or threats of violence.

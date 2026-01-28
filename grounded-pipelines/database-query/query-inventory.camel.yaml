@@ -1,0 +1,71 @@
+- route:
+    from:
+      uri: "direct:query-inventory"
+      steps:
+        - setVariable:
+            name: "userRequest"
+            simple: "${body}"
+        - setVariable:
+            name: "fewShotExamples"
+            simple: "resource:classpath:few-shot-examples.txt"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              ### ROLE
+              You are an Exhaustive Search Intent Parser. Your goal is to map the user's request
+              into the provided JSON schema as completely as possible.
+
+              ### CRITICAL RULES
+              1. **Price Logic:**
+                - "cheap", "budget" -> Set 'maxPrice' to 500.
+                - "premium", "luxury" -> Set 'minPrice' to 1000.
+                - "under X" -> Set 'maxPrice' to X.
+              2. **Availability:** Set "inStockOnly": true ONLY if asked ("available", "in stock").
+
+              ### FEW-SHOT EXAMPLES
+              ${variable.fewShotExamples}
+
+        - to:
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:inventory-search.schema.json"
+        - log:
+            message: "${body}"
+
+        - unmarshal:
+            json:
+              library: Jackson
+              unmarshalType: "java.util.Map"
+        - to: "mybatis:searchItems?statementType=SelectList"
+        - log:
+            message: "${body}"
+
+        - setVariable:
+            name: "searchResults"
+            simple: "${body}"
+        - setBody:
+            simple: "${variable.userRequest}"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              You are a helpful Inventory Assistant.
+              Answer the user's question using ONLY the search results below.
+
+              RESULTS:
+              ${variable.searchResults}
+        - to: "openai:chat-completion"
+
+- route:
+    id: "query-stream"
+    autoStartup: false
+    from:
+      uri: stream
+      parameters:
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: query-inventory
+        - to: "stream:out"

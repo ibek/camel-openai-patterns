@@ -1,0 +1,49 @@
+- route:
+    from:
+      uri: "direct:classify-leaf-node"
+      steps:
+        - setVariable:
+            name: "bankingCategoryTree"
+            simple: "resource:classpath:banking-category-tree.json"
+        - setVariable:
+            name: "fewShotExamples"
+            simple: "resource:classpath:few-shot-examples.txt"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              You are an expert Banking Taxonomy Classifier. Your goal is to map user inquiries to the single most specific leaf node in the provided JSON taxonomy.
+
+              ### TAXONOMY
+              ${variable.bankingCategoryTree}
+
+              ### CLASSIFICATION RULES
+              1. **Hierarchy of Urgency:** Prioritize "Security_and_Access" above all else. If a user mentions a lost card, theft, or inability to access their money, it must go to `Security_and_Access` regardless of the product type (Credit, Debit, or Loan).
+              2. **Fraud vs. Dispute Distinction:**
+                - Classify as `Unrecognized_Charge` (Fraud) if the user claims they *never* made the transaction or were not present.
+                - Classify as `Dispute_Transaction` if the user *did* authorize a purchase but the amount is wrong, the service was not received, or the subscription was cancelled but charged anyway.
+              3. **Intent Over Product:** Do not look for specific product names (e.g., "Visa", "Checking") to determine the top-level category. Look for the *action*.
+                - Example: A user asking for a "Checking Statement" and a "Credit Card Statement" should both route to `Account_Management > General_Inquiries > Statement_Request`.
+              4. **Exact Match Only:** The output "path" must match a valid path in the taxonomy exactly. Do not invent new nodes or combine paths.
+              5. **Distinguish Symptom from Solution:** Map generic symptoms to broad diagnostic categories, reserving specific resolution paths only when the user explicitly identifies the root cause.
+
+              ### FEW-SHOT EXAMPLES
+              ${variable.fewShotExamples}
+        - to:
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:classification-result.schema.json"
+        - to:
+            uri: "json-validator:classification-result.schema.json"
+
+- route:
+    from:
+      uri: stream
+      parameters:
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: classify-leaf-node
+        - to: "stream:out"

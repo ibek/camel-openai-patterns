@@ -1,0 +1,34 @@
+{
+    "type": "object",
+    "properties": {
+        "rationale": {
+            "type": "string",
+            "description": "Step-by-step reasoning. First, identify the user's core INTENT (e.g., Security, Moving Money, General Inquiry). Second, check for distinct modifiers (e.g., is it Fraud vs. a Dispute?). Third, confirm if the path applies to the user's context (e.g., ensuring 'Escrow' is only for Loans)."
+        },
+        "path": {
+            "type": "string",
+            "description": "The exact hierarchical path from the taxonomy, using ' > ' as the delimiter. It must start with the Root category and end with the Leaf node."
+        },
+        "confidence": {
+            "type": "number",
+            "description": "A score (0.0-1.0) measuring the semantic alignment between the user's request and the selected node. SCORING RULES: (0.90 - 1.0) DIRECT MATCH: User explicitly names the action or the specific scenario maps 1:1 to the node. (0.75 - 0.89) LOGICAL INFERENCE: User describes a situation that strongly implies a single specific path (e.g., 'I see a charge I didn't make' -> Fraud) without competing interpretations. (< 0.75) ASSUMPTION REQUIRED: User states a generic symptom (e.g., 'Login error', 'Card failed') and the model is forced to guess a specific root cause (e.g., choosing 'Password Reset' over 'Username Recovery').",
+            "minimum": 0.0,
+            "maximum": 1.0
+        },
+        "status": {
+            "type": "string",
+            "description": "The adjudication status. 'ACCEPTED' indicates confidence > 0.85. 'REJECTED' indicates low confidence requiring human review.",
+            "enum": [
+                "ACCEPTED",
+                "REJECTED"
+            ]
+        }
+    },
+    "required": [
+        "rationale",
+        "path",
+        "confidence",
+        "status"
+    ],
+    "additionalProperties": false
+}

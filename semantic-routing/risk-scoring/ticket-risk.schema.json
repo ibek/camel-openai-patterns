@@ -1,0 +1,35 @@
+{
+    "type": "object",
+    "properties": {
+        "reasoning": {
+            "type": "string",
+            "description": "A brief analysis of the user's intent"
+        },
+        "triageCategory": {
+            "type": "string",
+            "enum": [
+                "SECURITY_INCIDENT",
+                "LEGAL_COMPLIANCE",
+                "COMMERCIAL_RISK",
+                "STANDARD_SUPPORT"
+            ]
+        },
+        "interactionStyle": {
+            "type": "string",
+            "enum": [
+                "COOPERATIVE",
+                "FRUSTRATED",
+                "HOSTILE",
+                "MANIPULATIVE_URGENT",
+                "PROFESSIONAL"
+            ],
+            "description": "The tone and pressure tactics used by the user."
+        },
+        "riskScore": {
+            "type": "integer",
+            "description": "0-100. High scores indicate threats to safety, security, or revenue."
+        }
+    },
+    "required": ["reasoning", "triageCategory", "interactionStyle", "riskScore"],
+    "additionalProperties": false
+}

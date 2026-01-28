@@ -1,0 +1,13 @@
+# add camel.main.durationMaxMessages=1 to application.properties
+
+- route:
+    from:
+      uri: stream
+      parameters:
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: classify-leaf-node
+        - to: "stream:out"

@@ -1,0 +1,108 @@
+- route:
+    from:
+      uri: "direct:check-safety-with-guardrails"
+      steps:
+        # --- INPUT GUARDRAILS ---
+        
+        # 1. Cost Control (Length Check)
+        - choice:
+            when:
+              - simple: "${body.length} > 1000"
+                steps:
+                  - setBody:
+                      constant: '{"isSafe":false, "riskLevel":"CRITICAL", "reasoning":"Input too long (DoS prevention)"}'
+                  - stop: {}
+
+        # 2. Jailbreak/Injection Detection (Regex)
+        # We look for common attempts to override the system prompt.
+        - choice:
+            when:
+              - simple: "${body} regex '(?i).*(ignore|forget|override).*(instruction|rule|prompt).*'"
+                steps:
+                  - setBody:
+                      constant: '{"isSafe":false, "riskLevel":"CRITICAL", "reasoning":"Prompt Injection detected"}'
+                  - stop: {}
+        # --- END INPUT GUARDRAILS ---
+
+        # Proceed to Main Logic (Load Policy & Call OpenAI) ...
+        - to: "direct:check-safety-llm"
+        - unmarshal:
+            json:
+              library: Jackson
+              useList: false
+        
+        # --- OUTPUT GUARDRAILS ---
+
+        # 1. Logic Consistency Check
+        # If isSafe=true, riskLevel MUST be SAFE. If not, the LLM is confused.
+        - choice:
+            when:
+              - simple: "${body[isSafe]} == true && ${body[riskLevel]} != 'SAFE'"
+                steps:
+                  - log: "WARN: AI Hallucination detected (Inconsistent Logic). Defaulting to UNSAFE."
+                  - setBody:
+                      constant: '{"isSafe":false, "riskLevel":"SUSPICIOUS", "reasoning":"AI returned inconsistent safety logic."}'
+
+        # 2. Hallucinated Rule Check (Concept)
+        # Verify that cited rules actually exist in our policy text variable.
+        - split:
+            expression:
+              simple: "${body[policyCitations]}"
+            steps:
+              # Inside split, ${body} is the SINGLE citation string (e.g., "1. PII")
+              
+              # 3. Check against policy text
+              - choice:
+                  when:
+                    # Check if the policy text does NOT contain this specific citation rule header
+                    - simple: "${variable.policyText} not contains ${body}"
+                      steps:
+                        - log: "WARN: AI Hallucination? Cited non-existent rule: ${body}"
+                        - setHeader:
+                            name: "RequiresHumanReview"
+                            constant: "true"
+        
+        # --- END OUTPUT GUARDRAILS ---
+- route:
+    from:
+      uri: "direct:check-safety-llm"
+      steps:
+        - setVariable:
+            name: "policyText"
+            simple: "resource:classpath:community-policy.txt"
+        - setHeader:
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              ROLE: 
+              You are an AI Content Safety Officer for a teen gaming platform.
+              
+              TASK: 
+              Analyze the user's input against the provided "COMMUNITY GUIDELINES".
+              You must detect violations even if the user attempts to obfuscate words (e.g., "d!sc0rd", "m0ney").
+
+              INSTRUCTIONS:
+              1. Read the input text.
+              2. Compare it strictly against the rules below.
+              3. If a violation is found, cite the specific Rule Header (e.g., "1. PERSONAL IDENTIFIABLE INFORMATION").
+              4. Output the result in the required JSON format.
+
+              ---
+              POLICY DEFINITIONS:
+              ${variable.policyText}
+        - to:
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:safety.schema.json"
+
+- route:
+    from:
+      uri: stream
+      parameters:
+        kind: in
+      steps:
+        - to:
+            uri: direct
+            parameters:
+              name: check-safety-llm
+        - to: "stream:out"

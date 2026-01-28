@@ -1,0 +1,23 @@
+Input: "I was looking at my statement and there is a $500 charge for a hotel in Paris. I am currently in Ohio and have never been to France. Block this now."
+Output: {
+    "rationale": "The customer identifies a specific transaction they did not authorize and confirms they were not in the location where the charge originated. This indicates potential fraud rather than a merchant dispute.",
+    "path": "Security_and_Access > Fraud_and_Disputes > Unrecognized_Charge",
+    "confidence": 0.99,
+    "status": "ACCEPTED"
+}
+
+Input: "I ordered a subscription box last month. I cancelled it two weeks ago, but they still charged me $30 yesterday. I want a refund."
+Output: {
+    "rationale": "The customer recognizes the merchant and previously authorized payments, but the specific recent charge is invalid due to a prior cancellation. This is a billing dispute between the customer and the merchant.",
+    "path": "Security_and_Access > Fraud_and_Disputes > Dispute_Transaction",
+    "confidence": 0.97,
+    "status": "ACCEPTED"
+}
+
+Input: "I tried to get cash out at the 7-11 on Main St, but the machine said error. My account shows the money is gone though."
+Output: {
+    "rationale": "The customer attempted a withdrawal that failed mechanically (ATM error), but the funds were debited. This requires filing a dispute to reclaim the funds not dispensed.",
+    "path": "Security_and_Access > Fraud_and_Disputes > Dispute_Transaction",
+    "confidence": 0.95,
+    "status": "ACCEPTED"
+}

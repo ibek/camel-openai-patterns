@@ -1,0 +1,11 @@
+- route:
+    from:
+      uri: "timer:init"
+      parameters:
+        repeatCount: 1
+      steps:
+        - log: "--- Initializing Database ---"
+        - to: "mybatis:createTable?statementType=Update"
+        - to: "mybatis:seedData?statementType=Insert"
+        - log: "--- Database Ready ---"
+        - to: "controlbus:route?routeId=query-stream&action=start"

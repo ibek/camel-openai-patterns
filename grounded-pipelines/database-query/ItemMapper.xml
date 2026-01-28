@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="InventoryMapper">
+    <select id="searchItems" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT item_id, name, price, stock_qty
+        FROM items
+        <where>
+            <if test="category != null">
+                AND category = #{category}
+            </if>
+            <if test="brand != null">
+                AND brand = #{brand}
+            </if>
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+            <if test="inStockOnly == true">
+                AND stock_qty > 0
+            </if>
+        </where>
+    </select>
+</mapper>

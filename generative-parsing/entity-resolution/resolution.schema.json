@@ -1,0 +1,31 @@
+{
+    "type": "object",
+    "properties": {
+        "entityName": {
+            "type": "string",
+            "description": "The canonical name from the allowed list."
+        },
+        "entityId": {
+            "type": "string",
+            "description": "The unique ID from the allowed list."
+        },
+        "evidenceSpans": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Exact complete snippets from the raw text used to identify this entity."
+        },
+        "confidence": {
+            "type": "number",
+            "description": "A score between 0.15 and 1.0 indicating certainty."
+        }
+    },
+    "required": [
+        "evidenceSpans",
+        "entityName",
+        "entityId",
+        "confidence"
+    ],
+    "additionalProperties": false
+}

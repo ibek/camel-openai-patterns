@@ -1,0 +1,43 @@
+{
+    "type": "object",
+    "properties": {
+        "decodedFragment": {
+            "type": "string",
+            "description": "If the user used obfuscation (e.g., 'd!sc0rd'), output the normalized text here."
+        },
+        "policyCitations": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "description": "The exact header of the violated rule from the policy text (e.g., '1. PERSONAL IDENTIFIABLE INFORMATION')."
+            },
+            "description": "List of rules violated. Must be empty if isSafe is true."
+        },
+        "reasoning": {
+            "type": "string",
+            "description": "A brief explanation of why the content was flagged, citing specific keywords or intent."
+        },
+        "riskLevel": {
+            "type": "string",
+            "enum": [
+                "SAFE",
+                "LOW",
+                "MEDIUM",
+                "CRITICAL"
+            ],
+            "description": "The severity of the violation based on the policy context."
+        },
+        "isSafe": {
+            "type": "boolean",
+            "description": "Set to false if any rule from the provided policy text is violated."
+        }
+    },
+    "required": [
+        "decodedFragment",
+        "policyCitations",
+        "reasoning",
+        "isSafe",
+        "riskLevel"
+    ],
+    "additionalProperties": false
+}

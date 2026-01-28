@@ -1,0 +1,219 @@
+{
+    "type": "object",
+    "description": "Structured compliance audit results for a privacy policy, evaluated only against the provided corporate standards.",
+    "additionalProperties": false,
+    "required": [
+        "audit_results"
+    ],
+    "properties": {
+        "audit_results": {
+            "type": "object",
+            "description": "Per-requirement audit findings. Each key is a named requirement area and maps to one compliance finding.",
+            "additionalProperties": false,
+            "required": [
+                "DPO_CONTACT",
+                "DATA_RETENTION",
+                "COOKIES",
+                "THIRD_PARTY_SHARING",
+                "USER_RIGHTS"
+            ],
+            "properties": {
+                "DPO_CONTACT": {
+                    "type": "object",
+                    "description": "Assessment of whether the policy satisfies the corporate standard requirements for DPO or privacy contact information.",
+                    "additionalProperties": false,
+                    "required": [
+                        "standard_evidence",
+                        "policy_evidence",
+                        "status",
+                        "remediation"
+                    ],
+                    "properties": {
+                        "standard_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the CORPORATE STANDARDS that defines the requirement. If unavailable, write: \"No matching standard text found\".",
+                            "maxLength": 250
+                        },
+                        "policy_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the PRIVACY POLICY CONTENT that addresses the requirement. If missing, write: \"No matching policy text found\".",
+                            "maxLength": 250
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Compliance classification for this requirement, determined only by comparing the policy to the corporate standards.",
+                            "enum": [
+                                "Compliant",
+                                "Partially Compliant",
+                                "Non-Compliant",
+                                "Needs Clarification",
+                                "Not Applicable"
+                            ]
+                        },
+                        "remediation": {
+                            "type": "string",
+                            "description": "Minimal, precise remediation aligned to the corporate standard. Use an empty string when status is Compliant or Not Applicable.",
+                            "maxLength": 180
+                        }
+                    }
+                },
+                "DATA_RETENTION": {
+                    "type": "object",
+                    "description": "Assessment of whether the policy satisfies the corporate standard requirements for data retention and deletion timelines.",
+                    "additionalProperties": false,
+                    "required": [
+                        "standard_evidence",
+                        "policy_evidence",
+                        "status",
+                        "remediation"
+                    ],
+                    "properties": {
+                        "standard_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the CORPORATE STANDARDS that defines the requirement. If unavailable, write: \"No matching standard text found\".",
+                            "maxLength": 250
+                        },
+                        "policy_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the PRIVACY POLICY CONTENT that addresses the requirement. If missing, write: \"No matching policy text found\".",
+                            "maxLength": 250
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Compliance classification for this requirement, determined only by comparing the policy to the corporate standards.",
+                            "enum": [
+                                "Compliant",
+                                "Partially Compliant",
+                                "Non-Compliant",
+                                "Needs Clarification",
+                                "Not Applicable"
+                            ]
+                        },
+                        "remediation": {
+                            "type": "string",
+                            "description": "Minimal, precise remediation aligned to the corporate standard. Use an empty string when status is Compliant or Not Applicable.",
+                            "maxLength": 180
+                        }
+                    }
+                },
+                "COOKIES": {
+                    "type": "object",
+                    "description": "Assessment of whether the policy satisfies the corporate standard requirements for cookies, tracking technologies, and related disclosures.",
+                    "additionalProperties": false,
+                    "required": [
+                        "standard_evidence",
+                        "policy_evidence",
+                        "status",
+                        "remediation"
+                    ],
+                    "properties": {
+                        "standard_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the CORPORATE STANDARDS that defines the requirement. If unavailable, write: \"No matching standard text found\".",
+                            "maxLength": 250
+                        },
+                        "policy_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the PRIVACY POLICY CONTENT that addresses the requirement. If missing, write: \"No matching policy text found\".",
+                            "maxLength": 250
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Compliance classification for this requirement, determined only by comparing the policy to the corporate standards.",
+                            "enum": [
+                                "Compliant",
+                                "Partially Compliant",
+                                "Non-Compliant",
+                                "Needs Clarification",
+                                "Not Applicable"
+                            ]
+                        },
+                        "remediation": {
+                            "type": "string",
+                            "description": "Minimal, precise remediation aligned to the corporate standard. Use an empty string when status is Compliant or Not Applicable.",
+                            "maxLength": 180
+                        }
+                    }
+                },
+                "THIRD_PARTY_SHARING": {
+                    "type": "object",
+                    "description": "Assessment of whether the policy satisfies the corporate standard requirements for sharing data with third parties, including purposes and categories.",
+                    "additionalProperties": false,
+                    "required": [
+                        "standard_evidence",
+                        "policy_evidence",
+                        "status",
+                        "remediation"
+                    ],
+                    "properties": {
+                        "standard_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the CORPORATE STANDARDS that defines the requirement. If unavailable, write: \"No matching standard text found\".",
+                            "maxLength": 250
+                        },
+                        "policy_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the PRIVACY POLICY CONTENT that addresses the requirement. If missing, write: \"No matching policy text found\".",
+                            "maxLength": 250
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Compliance classification for this requirement, determined only by comparing the policy to the corporate standards.",
+                            "enum": [
+                                "Compliant",
+                                "Partially Compliant",
+                                "Non-Compliant",
+                                "Needs Clarification",
+                                "Not Applicable"
+                            ]
+                        },
+                        "remediation": {
+                            "type": "string",
+                            "description": "Minimal, precise remediation aligned to the corporate standard. Use an empty string when status is Compliant or Not Applicable.",
+                            "maxLength": 180
+                        }
+                    }
+                },
+                "USER_RIGHTS": {
+                    "type": "object",
+                    "description": "Assessment of whether the policy satisfies the corporate standard requirements for user rights (access, deletion, correction, portability, objection, etc.) and how to exercise them.",
+                    "additionalProperties": false,
+                    "required": [
+                        "standard_evidence",
+                        "policy_evidence",
+                        "status",
+                        "remediation"
+                    ],
+                    "properties": {
+                        "standard_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the CORPORATE STANDARDS that defines the requirement. If unavailable, write: \"No matching standard text found\".",
+                            "maxLength": 250
+                        },
+                        "policy_evidence": {
+                            "type": "string",
+                            "description": "Exact excerpt quoted from the PRIVACY POLICY CONTENT that addresses the requirement. If missing, write: \"No matching policy text found\".",
+                            "maxLength": 250
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Compliance classification for this requirement, determined only by comparing the policy to the corporate standards.",
+                            "enum": [
+                                "Compliant",
+                                "Partially Compliant",
+                                "Non-Compliant",
+                                "Needs Clarification",
+                                "Not Applicable"
+                            ]
+                        },
+                        "remediation": {
+                            "type": "string",
+                            "description": "Minimal, precise remediation aligned to the corporate standard. Use an empty string when status is Compliant or Not Applicable.",
+                            "maxLength": 180
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
