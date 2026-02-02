@@ -58,7 +58,6 @@
 
 - route:
     id: "query-stream"
-    autoStartup: false
     from:
       uri: stream
       parameters:
