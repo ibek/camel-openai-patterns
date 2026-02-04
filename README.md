@@ -77,7 +77,7 @@ camel --version
 ```bash
 export OPENAI_API_KEY=your-api-key
 export OPENAI_BASE_URL=http://localhost:11434/v1  # Ollama example
-export OPENAI_MODEL=ministral-3-8b
+export OPENAI_MODEL=ministral-3:8b
 ```
 
 > **Note:** If using the real OpenAI API, set `OPENAI_BASE_URL` to `https://api.openai.com/v1`.
