@@ -8,7 +8,10 @@
 
 This repository demonstrates architectural **patterns** for building reliable LLM applications using **Apache Camel**. Rather than relying on brittle prompt engineering alone, these examples show how to orchestrate interactions to ensure structured outputs, correct routing, and contextual integrity.
 
-📖 **Read the companion article**: [Making LLMs Boring: From Chatbots to Semantic Processors](https://developers.redhat.com/articles/2026/02/04/making-llms-boring-chatbots-semantic-processors)
+📖 **Read the companion articles**: 
+
+- [Making LLMs Boring: From Chatbots to Semantic Processors](https://developers.redhat.com/articles/2026/02/04/making-llms-boring-chatbots-semantic-processors)
+- [Boring RAG: When Similarity is Just a SQL Query](https://developers.redhat.com/articles/2026/02/19/boring-rag-when-similarity-just-sql-query)
 
 ---
 
