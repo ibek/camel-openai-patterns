@@ -191,10 +191,16 @@ and saves the response to an output folder.
 
 ### Export to Production
 
-Convert these examples to Maven/Gradle projects for Quarkus or Spring Boot:
+Convert the resources to Maven/Gradle project with Quarkus runtime. If the project uses Kaoto Forage dependencies (e.g. for database connection) install Kaoto Forage plugin to Camel Launcher `camel plugin add forage --gav=io.kaoto.forage:camel-jbang-plugin-forage:1.0`
 
 ```bash
-camel export --runtime=quarkus --directory=./my-project
+camel export --runtime=quarkus --directory=./my-project <resources>
+```
+
+Convert the resources to Maven/Gradle project with SpringBoot runtime:
+
+```bash
+camel export --runtime=springboot --directory=./my-project  <resources>
 ```
 
 ---
