@@ -1,0 +1,66 @@
+[
+  {
+    "id": "PROD-001",
+    "name": "Dell UltraSharp 27\" Monitor",
+    "category": "MONITOR",
+    "brand": "Dell",
+    "price": 549.99,
+    "description": "Professional-grade 4K UHD monitor with USB-C connectivity. Features IPS panel with 99% sRGB coverage, perfect for designers and content creators. Includes adjustable stand with height, tilt, and pivot options."
+  },
+  {
+    "id": "PROD-002",
+    "name": "Logitech MX Master 3S",
+    "category": "MOUSE",
+    "brand": "Logitech",
+    "price": 99.99,
+    "description": "Ergonomic wireless mouse with 8000 DPI sensor. Features MagSpeed electromagnetic scroll wheel, quiet clicks, and works on any surface including glass. USB-C quick charging."
+  },
+  {
+    "id": "PROD-003",
+    "name": "Apple Magic Keyboard",
+    "category": "KEYBOARD",
+    "brand": "Apple",
+    "price": 199.00,
+    "description": "Wireless keyboard with Touch ID for secure authentication. Features scissor mechanism keys with 1mm travel for responsive typing. Rechargeable via Lightning cable."
+  },
+  {
+    "id": "PROD-004",
+    "name": "Samsung 34\" Curved Gaming Monitor",
+    "category": "MONITOR",
+    "brand": "Samsung",
+    "price": 449.99,
+    "description": "Ultra-wide curved display with 165Hz refresh rate and 1ms response time. AMD FreeSync Premium support for tear-free gaming. HDR10 support with 1000R curvature."
+  },
+  {
+    "id": "PROD-005",
+    "name": "Keychron K2 Mechanical Keyboard",
+    "category": "KEYBOARD",
+    "brand": "Keychron",
+    "price": 89.00,
+    "description": "Compact 75% wireless mechanical keyboard with Gateron switches. RGB backlight with multiple effects. Works with Mac and Windows. Hot-swappable switch sockets."
+  },
+  {
+    "id": "PROD-006",
+    "name": "LG 32\" 4K Monitor",
+    "category": "MONITOR",
+    "brand": "LG",
+    "price": 399.99,
+    "description": "Large 32-inch 4K display with HDR10 support. AMD FreeSync for smooth visuals. Built-in speakers and USB-C with 60W power delivery for laptop charging."
+  },
+  {
+    "id": "PROD-007",
+    "name": "Razer DeathAdder V3",
+    "category": "MOUSE",
+    "brand": "Razer",
+    "price": 69.99,
+    "description": "Ultra-lightweight ergonomic gaming mouse at just 59g. Features 30K DPI optical sensor. Optical mouse switches with 90 million click durability."
+  },
+  {
+    "id": "PROD-008",
+    "name": "Bose QuietComfort Headphones",
+    "category": "HEADPHONES",
+    "brand": "Bose",
+    "price": 349.00,
+    "description": "Premium noise-cancelling wireless headphones with legendary Bose sound. Up to 24 hours battery life. Adjustable EQ in Bose Music app. Comfortable over-ear design."
+  }
+]

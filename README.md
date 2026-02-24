@@ -49,7 +49,7 @@ You need the Camel CLI to run these examples. [Camel Launcher Documentation](htt
 **Linux / macOS**
 
 ```bash
-wget https://repo1.maven.org/maven2/org/apache/camel/camel-launcher/4.17.0/camel-launcher-4.17.0-bin.zip
+wget https://repo1.maven.org/maven2/org/apache/camel/camel-launcher/4.18.0/camel-launcher-4.18.0-bin.zip
 unzip camel-launcher-*-bin.zip
 cd camel-launcher-*/
 chmod +x bin/camel.sh
@@ -107,17 +107,21 @@ echo "I lost my credit card and need to block it immediately" | camel run --sour
 The project is organized by pattern. Each directory contains a standalone quickstart with its own README and runnable Camel YAML files.
 
 ```text
-├── generative-parsing/       # Pattern 1: Structured Data Extraction
-│   ├── classify-leaf-node/   # Deep taxonomy classification
-│   ├── entity-resolution/    # Fuzzy matching to canonical IDs
-│   └── pii-redaction/        # Identify and mask PII
-├── semantic-routing/         # Pattern 2: Intent-based Routing
-│   ├── detect-gaps/          # Compliance gap analysis
-│   ├── moderation-policy/    # Content safety filtering
-│   └── risk-scoring/         # Quantitative risk assessment
-├── grounded-pipelines/       # Pattern 3: Context Injection
-│   └── database-query/       # Air-gapped SQL querying
-└── adapters/                 # Pluggable Input/Output definitions
+├── generative-parsing/          # Pattern 1: Structured Data Extraction
+│   ├── classify-leaf-node/      # Deep taxonomy classification
+│   ├── entity-resolution/       # Fuzzy matching to canonical IDs
+│   ├── pii-redaction/           # Identify and mask PII
+│   └── table-extraction/        # Extract invoice JSON from PDFs (tables/layout)
+├── semantic-routing/            # Pattern 2: Intent-based Routing
+│   ├── detect-duplicates/       # Embedding-based ticket deduplication
+│   ├── detect-gaps/             # Compliance gap analysis
+│   ├── moderation-policy/       # Content safety filtering
+│   └── risk-scoring/            # Quantitative risk assessment
+├── grounded-pipelines/          # Pattern 3: Context Injection
+│   ├── database-query/          # Air-gapped SQL querying
+│   ├── document-qa/             # RAG-based document Q&A
+│   └── similarity-search-query/ # Embedding-based product search
+└── adapters/                    # Pluggable Input/Output definitions
 ```
 
 ---
@@ -177,7 +181,7 @@ These patterns work with any OpenAI-compatible model. For cost-effective local p
 Don't just write YAML by hand! Use [**Kaoto**](https://kaoto.io/) for designing your Camel routes visually, or leverage AI coding assistants (Claude, Cursor, Copilot) with prompts like:
 
 ```
-Create a Camel 4.17 YAML route that monitors a folder for new text files,
+Create a Camel 4.18 YAML route that monitors a folder for new text files,
 sends small files (<5KB) to the camel-openai component for summarization,
 and saves the response to an output folder.
 ```

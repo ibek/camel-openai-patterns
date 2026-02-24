@@ -1,0 +1,84 @@
+- route:
+    id: document-qa
+    description: RAG Pipeline
+    from:
+      description: document-qa
+      uri: direct
+      parameters:
+        name: document-qa
+      steps:
+        - setVariable:
+            description: Save Question
+            name: question
+            simple: ${body.trim()}
+        - log:
+            description: Log Question
+            message: "Question: ${variable.question}"
+        - to:
+            description: Get Embeddings
+            uri: openai:embeddings
+        - setVariable:
+            description: Save Embedding
+            name: queryEmbedding
+            simple: ${body.toString()}
+        - to:
+            description: Vector Search
+            uri: >
+              sql:SELECT content, source,
+                   1 - (embedding <=> :#queryEmbedding::vector) as similarity
+              FROM chunks
+              WHERE 1 - (embedding <=> :#queryEmbedding::vector) > {{rag.similarity.threshold}}
+              ORDER BY embedding <=> :#queryEmbedding::vector
+              LIMIT {{rag.topK}}
+        - setVariable:
+            description: Save Results
+            name: searchResults
+            simple: ${body}
+        - log:
+            description: Log Results Count
+            message: Found ${body.size()} relevant chunks
+        - choice:
+            description: Check Results
+            otherwise:
+              steps:
+                - setVariable:
+                    description: Prepare Context
+                    name: context
+                    simple: ${variable.searchResults}
+                - setBody:
+                    description: Set User Prompt
+                    simple: ${variable.question}
+                - setHeader:
+                    description: System Instructions
+                    name: CamelOpenAISystemMessage
+                    simple: >
+                      Answer the question using ONLY the context below.
+                      If the context doesn't contain enough information, say "I don't have complete information on that."
+                      Be concise and cite the source when relevant.
+
+                      Context:
+                      ${variable.context}
+                - to:
+                    description: Generate Answer
+                    uri: openai:chat-completion
+                    parameters:
+                      temperature: 0.15
+            when:
+              - steps:
+                  - setBody:
+                      description: Default Answer
+                      constant: I don't have any relevant information to answer that question.
+                simple: ${body.size()} == 0
+- route:
+    id: console-adapter
+    description: "Console Adapter"
+    from:
+      description: stream-in
+      uri: stream:in
+      steps:
+        - to:
+            description: document-qa
+            uri: direct:document-qa
+        - to:
+            description: stream-out
+            uri: stream:out

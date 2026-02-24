@@ -1,0 +1,86 @@
+- route:
+    id: query-inventory
+    description: "Product Search"
+    from:
+      description: query-inventory
+      uri: "direct:query-inventory"
+      steps:
+        - setVariable:
+            description: "Save Query"
+            name: userQuery
+            simple: "${body.trim()}"
+        - log:
+            description: "Log Query"
+            message: "Searching: ${variable.userQuery}"
+        - to:
+            description: "Get Embedding"
+            uri: openai:embeddings
+        - setVariable:
+            description: "Save Vector"
+            name: queryEmbedding
+            simple: "${body.toString()}"
+        - to:
+            description: "Vector Search"
+            uri: |
+              sql:SELECT product_id, name, category, brand, price, description,
+                   1 - (embedding <=> :#queryEmbedding::vector) as similarity
+              FROM products
+              WHERE 1 - (embedding <=> :#queryEmbedding::vector) > {{search.similarity.threshold}}
+              ORDER BY embedding <=> :#queryEmbedding::vector
+              LIMIT {{search.topK}}
+        - setVariable:
+            description: "Save Results"
+            name: searchResults
+            simple: "${body}"
+        - log:
+            description: "Log Results"
+            message: "Found ${body.size()} matching products"
+        - choice:
+            description: "Check Results"
+            when:
+              - simple: "${body.size()} == 0"
+                steps:
+                  - setBody:
+                      description: "No Results"
+                      constant: "I couldn't find any products matching your description. Try different keywords."
+            otherwise:
+              steps:
+                - setBody:
+                    description: "Restore Query"
+                    simple: "${variable.userQuery}"
+                - setHeader:
+                    description: "Set Prompt"
+                    name: CamelOpenAISystemMessage
+                    simple: |
+                      You are a helpful product advisor.
+                      
+                      The user asked: "${variable.userQuery}"
+                      
+                      Here are the matching products:
+                      ${variable.searchResults}
+                      
+                      Instructions:
+                      - Summarize the options helpfully
+                      - Explain why each product might match their needs
+                      - Mention prices
+                      - Be concise
+                - to:
+                    description: "Generate Answer"
+                    uri: openai:chat-completion
+                    parameters:
+                      temperature: 0.3
+
+- route:
+    id: console-adapter
+    description: "Console Adapter"
+    from:
+      description: stream-in
+      uri: stream:in
+      steps:
+        - to:
+            description: query-inventory
+            uri: direct:query-inventory
+        - to:
+            description: stream-out
+            uri: "stream:out"
+

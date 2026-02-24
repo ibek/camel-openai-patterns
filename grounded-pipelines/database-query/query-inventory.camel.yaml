@@ -1,14 +1,20 @@
 - route:
+    id: query-inventory
+    description: "Inventory Search"
     from:
+      description: query-inventory
       uri: "direct:query-inventory"
       steps:
         - setVariable:
+            description: "Save User Request"
             name: "userRequest"
             simple: "${body}"
         - setVariable:
+            description: "Load Examples"
             name: "fewShotExamples"
             simple: "resource:classpath:few-shot-examples.txt"
         - setHeader:
+            description: "Set Parser Instructions"
             name: "CamelOpenAISystemMessage"
             simple: >
               ### ROLE
@@ -26,27 +32,36 @@
               ${variable.fewShotExamples}
 
         - to:
+            description: "Extract Search Intent"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:inventory-search.schema.json"
         - log:
+            description: "Log Parsed Intent"
             message: "${body}"
 
         - unmarshal:
+            description: "Unmarshal JSON"
             json:
               library: Jackson
               unmarshalType: "java.util.Map"
-        - to: "mybatis:searchItems?statementType=SelectList"
+        - to:
+            description: "Search Database"
+            uri: "mybatis:searchItems?statementType=SelectList"
         - log:
+            description: "Log DB Results"
             message: "${body}"
 
         - setVariable:
+            description: "Save DB Results"
             name: "searchResults"
             simple: "${body}"
         - setBody:
+            description: "Restore User Request"
             simple: "${variable.userRequest}"
         - setHeader:
+            description: "Set Assistant Instructions"
             name: "CamelOpenAISystemMessage"
             simple: >
               You are a helpful Inventory Assistant.
@@ -54,17 +69,20 @@
 
               RESULTS:
               ${variable.searchResults}
-        - to: "openai:chat-completion"
+        - to:
+            description: "Generate Final Answer"
+            uri: "openai:chat-completion"
 
 - route:
-    id: "query-stream"
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
-            uri: direct
-            parameters:
-              name: query-inventory
-        - to: "stream:out"
+            description: query-inventory
+            uri: direct:query-inventory
+        - to:
+            description: stream-out
+            uri: stream:out

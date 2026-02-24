@@ -1,14 +1,20 @@
 - route:
+    id: classify-leaf-node
+    description: "Taxonomy Classifier"
     from:
+      description: classify-leaf-node
       uri: "direct:classify-leaf-node"
       steps:
         - setVariable:
+            description: "Load Taxonomy"
             name: "bankingCategoryTree"
             simple: "resource:classpath:banking-category-tree.json"
         - setVariable:
+            description: "Load Examples"
             name: "fewShotExamples"
             simple: "resource:classpath:few-shot-examples.txt"
         - setHeader:
+            description: "Set System Prompt"
             name: "CamelOpenAISystemMessage"
             simple: >
               You are an expert Banking Taxonomy Classifier. Your goal is to map user inquiries to the single most specific leaf node in the provided JSON taxonomy.
@@ -29,21 +35,25 @@
               ### FEW-SHOT EXAMPLES
               ${variable.fewShotExamples}
         - to:
+            description: "Classify Intent"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:classification-result.schema.json"
         - to:
+            description: "Validate JSON Output"
             uri: "json-validator:classification-result.schema.json"
 
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
-            uri: direct
-            parameters:
-              name: classify-leaf-node
-        - to: "stream:out"
+            description: classify-leaf-node
+            uri: direct:classify-leaf-node
+        - to:
+            description: stream-out
+            uri: stream:out

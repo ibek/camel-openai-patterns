@@ -1,8 +1,12 @@
 - route:
+    id: pii-redaction
+    description: "PII Redaction"
     from:
+      description: pii-redaction
       uri: "direct:pii-redaction"
       steps:
         - to:
+            description: "Redact Text"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
@@ -17,13 +21,15 @@
                 3. Preserve the grammatical structure of the sentence.
 
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
-            uri: direct
-            parameters:
-              name: pii-redaction
-        - to: "stream:out"
+            description: pii-redaction
+            uri: direct:pii-redaction
+        - to:
+            description: stream-out
+            uri: stream:out

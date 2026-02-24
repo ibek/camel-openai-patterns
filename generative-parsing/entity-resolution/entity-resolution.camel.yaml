@@ -1,8 +1,12 @@
 - route:
+    id: entity-resolution
+    description: "Entity Resolution"
     from:
+      description: entity-resolution
       uri: "direct:entity-resolution"
       steps:
         - setVariable:
+            description: "Define Whitelist"
             name: "entityWhitelist"
             expression:
               constant: |
@@ -12,14 +16,16 @@
                   {"id": "1024", "name": "Orion Logistics"}
                 ]
         - setHeader:
+            description: "Set Engine Instructions"
             name: "CamelOpenAISystemMessage"
             simple: |
-                You are a data normalization engine. 
+                You are a data normalization engine.
                 Match the input text to exactly one entity from the provided Whitelist
                 - If the entity is found, return the ID and Name
                 - If no match is found, return null values
                 - Never invent new IDs
         - setBody:
+            description: "Prepare Prompt Body"
             simple: |
                 RAW_INPUT_TEXT_START
                 ${body}
@@ -29,18 +35,22 @@
                 ${variable.entityWhitelist}
                 WHITELIST_JSON_END
         - to:
+            description: "Match Entity"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:resolution.schema.json"
+
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
-            uri: direct
-            parameters:
-              name: entity-resolution
-        - to: "stream:out"
+            description: entity-resolution
+            uri: direct:entity-resolution
+        - to:
+            description: stream-out
+            uri: stream:out

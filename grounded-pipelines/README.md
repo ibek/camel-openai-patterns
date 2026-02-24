@@ -1,13 +1,29 @@
 ## Grounded Pipelines (Contextual Integrity)
 
-One of the most dangerous trends in 2025/2026 is the "Text-to-SQL" agent - giving a model direct access to your database schema and hoping it writes safe queries. It’s a security nightmare waiting to happen.
+**Grounded Pipelines** treat the LLM as an *untrusted* component inside a trusted integration flow. The model can help interpret intent and write natural-language responses, but it must do so using **bounded inputs** (schemas, retrieved context, search results) rather than “whatever it remembers.”
 
-**Grounded Pipelines** take a stricter approach. We don't want the model to *execute* actions; we only want it to **define the intent and parameters**.
+This preserves **contextual integrity**: the answer is constrained to the *right* source of truth (your DB, your documents, your index) and to the *right* level of access (no direct SQL, no arbitrary tools, no hidden data paths).
 
-Instead of asking an agent to "figure it out," we decompose the task into three distinct phases. We treat the LLM not as a decision-maker, but as two separate components in a standard Camel route: a **Parser** at the start and a **Synthesizer** at the end. The AI never touches the database directly. It never executes code. It sits safely on the perimeter, leaving the core integration logic strictly deterministic.
+**Use Cases:** RAG Q&A, product discovery, “safe” database querying, knowledge-base assistants, compliance-friendly summaries, and any workflow where “sounds plausible” is a failure mode.
 
-- **The Parser (AI):** Converts unstructured user text into strict, validatable JSON. It identifies the intent and parameters but performs **no** actions.     
-- **The Executor (System):** The "Air Gap." Camel runs the actual logic (SQL, APIs, File I/O) using the trusted JSON parameters. The AI is completely removed from this step and it cannot improvise here.
-- **The Synthesizer (AI):** Receives the raw system data and transforms it into a clean natural language response. It reports only what the Executor provides.
+## The Pattern
 
-**Use Cases:** Zero-Trust retrieval, "Air-Gapped" execution, and sanitized querying
+Most grounded pipelines follow the same shape:
+
+- **Interpret (LLM → intent)**: Convert the user’s text into a safe intermediate form (e.g., JSON that matches a schema) or into an embedding for retrieval.
+- **Retrieve/Execute (trusted code)**: Perform lookups with allowlisted queries, deterministic filters, and clear limits (SQL, MyBatis, vector similarity, etc.).
+- **Compose (LLM → response)**: Ask the model to answer **using only** the retrieved evidence/results.
+- **Refuse (no evidence)**: If nothing relevant is found, **say so** rather than hallucinating.
+
+## What “Grounded” Means Here
+
+- **No direct data access from the model**: the LLM never runs SQL or touches credentials.
+- **Outputs are constrained**: schemas, low temperature, and few-shot examples reduce “creative” parsing.
+- **Evidence is explicit**: the response is generated from retrieved chunks or query results you can log and audit.
+- **Failure is a first-class path**: “I don’t have that information” is a valid (and desirable) outcome.
+
+## How to Extend This Pattern
+
+- **Tune retrieval**: adjust `topK`, similarity thresholds, and chunking rules.
+
+

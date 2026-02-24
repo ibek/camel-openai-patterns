@@ -1,0 +1,12 @@
+services:
+  postgres:
+    image: docker.io/pgvector/pgvector:pg18-trixie
+    container_name: pgvector
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: documents
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql

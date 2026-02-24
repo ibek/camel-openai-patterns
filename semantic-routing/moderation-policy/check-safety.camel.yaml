@@ -1,11 +1,15 @@
 - route:
+    id: check-safety-with-guardrails
+    description: "Safety Guardrails"
     from:
+      description: check-safety-with-guardrails
       uri: "direct:check-safety-with-guardrails"
       steps:
         # --- INPUT GUARDRAILS ---
         
         # 1. Cost Control (Length Check)
         - choice:
+            description: "Length Check"
             when:
               - simple: "${body.length} > 1000"
                 steps:
@@ -16,6 +20,7 @@
         # 2. Jailbreak/Injection Detection (Regex)
         # We look for common attempts to override the system prompt.
         - choice:
+            description: "Injection Check"
             when:
               - simple: "${body} regex '(?i).*(ignore|forget|override).*(instruction|rule|prompt).*'"
                 steps:
@@ -25,8 +30,11 @@
         # --- END INPUT GUARDRAILS ---
 
         # Proceed to Main Logic (Load Policy & Call OpenAI) ...
-        - to: "direct:check-safety-llm"
+        - to:
+            description: "Run Policy"
+            uri: "direct:check-safety-llm"
         - unmarshal:
+            description: "Parse JSON"
             json:
               library: Jackson
               useList: false
@@ -36,6 +44,7 @@
         # 1. Logic Consistency Check
         # If isSafe=true, riskLevel MUST be SAFE. If not, the LLM is confused.
         - choice:
+            description: "Logic Check"
             when:
               - simple: "${body[isSafe]} == true && ${body[riskLevel]} != 'SAFE'"
                 steps:
@@ -46,6 +55,7 @@
         # 2. Hallucinated Rule Check (Concept)
         # Verify that cited rules actually exist in our policy text variable.
         - split:
+            description: "Check Citations"
             expression:
               simple: "${body[policyCitations]}"
             steps:
@@ -53,6 +63,7 @@
               
               # 3. Check against policy text
               - choice:
+                  description: "Validate Rule"
                   when:
                     # Check if the policy text does NOT contain this specific citation rule header
                     - simple: "${variable.policyText} not contains ${body}"
@@ -64,13 +75,18 @@
         
         # --- END OUTPUT GUARDRAILS ---
 - route:
+    id: check-safety-llm
+    description: "Policy Check"
     from:
+      description: check-safety-llm
       uri: "direct:check-safety-llm"
       steps:
         - setVariable:
+            description: "Load Policy"
             name: "policyText"
             simple: "resource:classpath:community-policy.txt"
         - setHeader:
+            description: "Set Prompt"
             name: "CamelOpenAISystemMessage"
             simple: >
               ROLE: 
@@ -90,19 +106,24 @@
               POLICY DEFINITIONS:
               ${variable.policyText}
         - to:
+            description: "Get Verdict"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:safety.schema.json"
 
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
+            description: check-safety-llm
             uri: direct
             parameters:
               name: check-safety-llm
-        - to: "stream:out"
+        - to:
+            description: stream-out
+            uri: "stream:out"

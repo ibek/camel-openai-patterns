@@ -1,11 +1,16 @@
 - route:
+    id: triage-ticket
+    description: "Risk Scoring"
     from:
+      description: triage-ticket
       uri: "direct:triage-ticket"
       steps:
         - setVariable:
+            description: "Load Rubric"
             name: "riskRubric"
             simple: "resource:classpath:risk-rubric.txt"
         - setHeader:
+            description: "Set Prompt"
             name: "CamelOpenAISystemMessage"
             expression:
               simple: |
@@ -15,19 +20,24 @@
 
                 ${variable.riskRubric}
         - to:
+            description: "Score Ticket"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:ticket-risk.schema.json"
 
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
+            description: triage-ticket
             uri: direct
             parameters:
               name: triage-ticket
-        - to: "stream:out"
+        - to:
+            description: stream-out
+            uri: "stream:out"

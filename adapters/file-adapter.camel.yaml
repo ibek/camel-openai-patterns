@@ -1,17 +1,23 @@
-# remove camel.main.durationMaxMessages=1 from application.properties
+# remove camel.main.durationMaxIdleSeconds=5 from application.properties
 
 - route:
-    id: file-input-adapter
+    id: file-adapter
+    description: "File Adapter"
     from:
+      description: "data/inbox"
       uri: "file:data/inbox"
       parameters:
         # Move file to .camel hidden folder after processing to prevent loops
         move: data/processed/${date:now:yyyyMMdd-HHmmss}-${file:name}
       steps:
-        - log: "Processing file: ${header.CamelFileName}"
+        - log:
+            description: "Log File"
+            message: "Processing file: ${header.CamelFileName}"
         - to:
+            description: classify-leaf-node
             uri: "direct:classify-leaf-node"
         - to:
+            description: "File Out"
             uri: "file:data/outbox"
             parameters:
               fileName: "classified-${date:now:yyyyMMdd-HHmmss}.json"

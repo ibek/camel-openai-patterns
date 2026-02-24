@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Invoice",
+  "description": "A standard canonical data model for an invoice.",
+  "type": "object",
+  "required": [
+    "invoiceId",
+    "issueDate",
+    "currencyCode",
+    "supplier",
+    "customer",
+    "lineItems",
+    "legalMonetaryTotal"
+  ],
+  "properties": {
+    "invoiceId": {
+      "type": "string",
+      "description": "The unique identifier for the invoice."
+    },
+    "invoiceTypeCode": {
+      "type": "string",
+      "description": "Code specifying the type of invoice (e.g., 380 for Commercial Invoice, 381 for Credit Note based on UNTDID 1001)."
+    },
+    "issueDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The date the invoice was issued."
+    },
+    "dueDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The date the invoice is due for payment."
+    },
+    "currencyCode": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3,
+      "description": "ISO 4217 currency code (e.g., USD, EUR)."
+    },
+    "supplier": {
+      "$ref": "#/definitions/Party",
+      "description": "The party issuing the invoice (Creditor)."
+    },
+    "customer": {
+      "$ref": "#/definitions/Party",
+      "description": "The party receiving the invoice (Debtor)."
+    },
+    "lineItems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/InvoiceLine"
+      }
+    },
+    "taxTotal": {
+      "type": "number",
+      "description": "The total amount of tax for the invoice."
+    },
+    "legalMonetaryTotal": {
+      "type": "object",
+      "required": [
+        "lineExtensionAmount",
+        "taxExclusiveAmount",
+        "taxInclusiveAmount",
+        "payableAmount"
+      ],
+      "properties": {
+        "lineExtensionAmount": {
+          "type": "number",
+          "description": "Sum of all line item net amounts."
+        },
+        "taxExclusiveAmount": {
+          "type": "number",
+          "description": "Total amount without tax."
+        },
+        "taxInclusiveAmount": {
+          "type": "number",
+          "description": "Total amount including tax."
+        },
+        "payableAmount": {
+          "type": "number",
+          "description": "The actual amount to be paid."
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Free text notes or payment instructions."
+    }
+  },
+  "definitions": {
+    "Party": {
+      "type": "object",
+      "required": [
+        "partyId",
+        "partyName",
+        "postalAddress"
+      ],
+      "properties": {
+        "partyId": {
+          "type": "string",
+          "description": "Internal ERP or CRM ID for the party."
+        },
+        "taxId": {
+          "type": "string",
+          "description": "VAT or Tax Identification Number."
+        },
+        "partyName": {
+          "type": "string"
+        },
+        "postalAddress": {
+          "type": "object",
+          "properties": {
+            "streetName": {
+              "type": "string"
+            },
+            "cityName": {
+              "type": "string"
+            },
+            "postalCode": {
+              "type": "string"
+            },
+            "countryCode": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 country code."
+            }
+          }
+        }
+      }
+    },
+    "InvoiceLine": {
+      "type": "object",
+      "required": [
+        "lineId",
+        "item",
+        "invoicedQuantity",
+        "price"
+      ],
+      "properties": {
+        "lineId": {
+          "type": "integer",
+          "description": "Sequential line number starting at 1."
+        },
+        "item": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Description of the item or service."
+            }
+          }
+        },
+        "invoicedQuantity": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Must be strictly greater than 0."
+        },
+        "price": {
+          "type": "object",
+          "required": [
+            "priceAmount"
+          ],
+          "properties": {
+            "priceAmount": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

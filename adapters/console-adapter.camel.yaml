@@ -1,13 +1,17 @@
-# add camel.main.durationMaxMessages=1 to application.properties
+# add camel.main.durationMaxIdleSeconds=5 to application.properties
 
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
-      uri: stream
-      parameters:
-        kind: in
+      description: stream-in
+      uri: stream:in
       steps:
         - to:
-            uri: direct
+            description: classify-leaf-node
+            uri: direct:classify-leaf-node
+        - to:
+            description: stream-out
+            uri: stream
             parameters:
-              name: classify-leaf-node
-        - to: "stream:out"
+              kind: out

@@ -1,11 +1,16 @@
 - route:
+    id: privacy-audit
+    description: "Privacy Audit"
     from:
+      description: privacy-audit
       uri: "direct:privacy-audit"
       steps:
         - setVariable:
+            description: "Load Standard"
             name: "corporateStandard"
             simple: "resource:classpath:corporate-standard.txt"
         - setHeader:
+            description: "Set Prompt"
             name: "CamelOpenAISystemMessage"
             simple: |
                 You are a compliance auditor.
@@ -25,23 +30,32 @@
                 CORPORATE STANDARDS:
                 ${variable.corporateStandard}
         - to:
+            description: "Run Audit"
             uri: "openai:chat-completion"
             parameters:
               temperature: 0.15
               jsonSchema: "resource:classpath:privacy-audit.schema.json"
         - log:
+            description: "Log Result"
             message: "${body}"
         - to:
+            description: "Validate JSON"
             uri: "json-validator:privacy-audit.schema.json"
 - route:
+    id: console-adapter
+    description: "Console Adapter"
     from:
+      description: stream-in
       uri: stream
       parameters:
         readLine: false
         kind: in
       steps:
         - to:
+            description: privacy-audit
             uri: direct
             parameters:
               name: privacy-audit
-        - to: "stream:out"
+        - to:
+            description: stream-out
+            uri: "stream:out"

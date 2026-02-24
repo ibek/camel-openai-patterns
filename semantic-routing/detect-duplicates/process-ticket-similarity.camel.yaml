@@ -1,0 +1,85 @@
+- route:
+    id: process-ticket-similarity
+    description: "Ticket Dedup"
+    from:
+      description: process-ticket-similarity
+      uri: direct:process-ticket-similarity
+      steps:
+        - setVariable:
+            description: "Save Ticket"
+            name: newTicket
+            simple: "${body.trim()}"
+        - log:
+            description: "Log Ticket"
+            message: "Checking: ${variable.newTicket}"
+        - to:
+            description: "Get Embedding"
+            uri: openai:embeddings
+        - setVariable:
+            description: "Save Vector"
+            name: ticketEmbedding
+            simple: "${body.toString()}"
+        - to:
+            description: "Search Tickets"
+            uri: |
+              sql:SELECT ticket_id, description,
+                   1 - (embedding <=> :#ticketEmbedding::vector) as similarity
+              FROM tickets
+              WHERE 1 - (embedding <=> :#ticketEmbedding::vector) > {{dedup.similarity.threshold}}
+              ORDER BY embedding <=> :#ticketEmbedding::vector
+              LIMIT 1
+        - choice:
+            description: "Check Match"
+            when:
+              # Found similar ticket -> DUPLICATE
+              - simple: "${body.size()} > 0"
+                steps:
+                  - setVariable:
+                      description: "Save Match"
+                      name: matchedTicketId
+                      simple: "${body[0][ticket_id]}"
+                  - setVariable:
+                      description: "Save Score"
+                      name: similarity
+                      simple: "${body[0][similarity]}"
+                  - log:
+                      description: "Log Duplicate"
+                      message: "DUPLICATE - similar to: ${variable.matchedTicketId}"
+                  - setBody:
+                      description: "Set Result"
+                      simple: |
+                        {"isDuplicate": true, "action": "LINK_TO_EXISTING", "similarTo": "${variable.matchedTicketId}", "similarity": ${variable.similarity}}
+            otherwise:
+              # No similar ticket -> CREATE NEW
+              steps:
+                - log:
+                    description: "Log New"
+                    message: "NEW ticket - no duplicates found"
+                - setVariable:
+                    description: "New Ticket"
+                    name: newTicketId
+                    simple: "TKT-${date:now:yyyyMMddHHmmss}"
+                - to:
+                    description: "Save Ticket"
+                    uri: sql:INSERT INTO tickets (ticket_id, description, embedding) VALUES (:#newTicketId, :#newTicket, :#ticketEmbedding::vector)
+                - setBody:
+                    description: "Set Result"
+                    simple: |
+                      {"isDuplicate": false, "action": "CREATE_NEW", "ticketId": "${variable.newTicketId}"}
+
+- route:
+    id: console-adapter
+    description: "Console Adapter"
+    from:
+      description: stream-in
+      uri: stream:in
+      steps:
+        - to:
+            description: process-ticket-similarity
+            uri: direct
+            parameters:
+              name: process-ticket-similarity
+        - to:
+            description: stream-out
+            uri: "stream:out"
+

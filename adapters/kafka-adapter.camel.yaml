@@ -1,5 +1,5 @@
 # add camel.component.kafka.brokers=localhost:9092 to application.properties
-# remove camel.main.durationMaxMessages=1 from application.properties
+# remove camel.main.durationMaxIdleSeconds=5 from application.properties
 
 - errorHandler:
     # If anything fails (LLM down, Validation error), send here
@@ -9,14 +9,23 @@
 
 - route:
     id: kafka-banking-adapter
+    description: "Kafka Adapter"
     from:
+      description: "banking.inquiry.received"
       uri: "kafka:banking.inquiry.received"
       parameters:
         groupId: "banking-classifier-svc"
         autoOffsetReset: "earliest"
       steps:
-        - log: "Analyzing inquiry: ${body}"
-        - to: "direct:classify-leaf-node"
-        - removeHeaders: "*"
+        - log:
+            description: "Log Inquiry"
+            message: "Analyzing inquiry: ${body}"
         - to:
+            description: "Run Classifier"
+            uri: "direct:classify-leaf-node"
+        - removeHeaders:
+            description: "Clear Headers"
+            pattern: "*"
+        - to:
+            description: "banking.inquiry.classified"
             uri: "kafka:banking.inquiry.classified"

@@ -1,0 +1,51 @@
+- beans:
+    - name: markdownSemanticTokenizer
+      type: org.apache.camel.tokenizer.MarkdownSemanticTokenizer
+      properties:
+        headerMode: "RAG_CONTEXT"
+- route:
+    id: index-files
+    description: "Document Indexing"
+    from:
+      description: "documents/*.md"
+      uri: file:documents
+      parameters:
+        noop: true
+        include: ".*\\.md"
+      steps:
+        - setVariable:
+            description: "Save File Name"
+            name: fileName
+            simple: "${header.CamelFileName}"
+        - log:
+            description: "Log Start"
+            message: "Processing: ${variable.fileName}"
+        - split:
+            description: "Split Markdown"
+            method:
+              ref: "markdownSemanticTokenizer"
+            steps:
+              - setVariable:
+                  description: "Save Index"
+                  name: chunkIndex
+                  simple: "${exchangeProperty.CamelSplitIndex}"
+              - setVariable:
+                  description: "Save Chunk"
+                  name: chunkText
+                  simple: "${body.trim()}"
+              - to:
+                  description: "Generate Embedding"
+                  uri: openai:embeddings
+              - setVariable:
+                  description: "Save Vector"
+                  name: embeddingVector
+                  simple: "${body.toString()}"
+              - to:
+                  description: "Insert into DB"
+                  uri: sql:INSERT INTO chunks (content, source, chunk_index, embedding) VALUES (:#chunkText, :#fileName, :#chunkIndex, :#embeddingVector::vector)
+              - log:
+                  description: "Log Progress"
+                  message: "  Indexed chunk ${variable.chunkIndex}"
+        - log:
+            description: "Log Completion"
+            message: "Completed: ${variable.fileName}"

@@ -1,16 +1,25 @@
 # 1) add camel.server.port=8080 into application.properties
-# 2) remove camel.main.durationMaxMessages=1 from application.properties
+# 2) remove camel.main.durationMaxIdleSeconds=5 from application.properties
 
 - route:
+    id: http-adapter
+    description: "HTTP Adapter"
     from:
+      description: "/api/classify"
       uri: "platform-http:/api/classify"
       parameters:
         httpMethodRestrict: "POST"
       steps:
-        - log: "Received HTTP Request: ${body}"
+        - log:
+            description: "Log Request"
+            message: "Received HTTP Request: ${body}"
         - to:
+            description: classify-leaf-node
             uri: "direct:classify-leaf-node"
-        - removeHeaders: "*"
+        - removeHeaders:
+            description: "Clear Headers"
+            pattern: "*"
         - setHeader:
+            description: "Set Type"
             name: "Content-Type"
             constant: "text/plain"

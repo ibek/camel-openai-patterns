@@ -49,7 +49,7 @@ echo "Your input text" | camel run --source-dir=./
 **Configuration:** Add to `application.properties`:
 
 ```properties
-camel.main.durationMaxMessages=1
+camel.main.durationMaxIdleSeconds=5
 ```
 
 ---
@@ -88,7 +88,7 @@ curl -X POST -d "Your input text" http://localhost:8080/api/classify
 
 ```properties
 camel.server.port=8080
-# Remove: camel.main.durationMaxMessages=1
+# Remove: camel.main.durationMaxIdleSeconds=5
 ```
 
 ---
@@ -137,7 +137,7 @@ kcat -C -b localhost:9092 -t topic.processed
 
 ```properties
 camel.component.kafka.brokers=localhost:9092
-# Remove: camel.main.durationMaxMessages=1
+# Remove: camel.main.durationMaxIdleSeconds=5
 ```
 
 ---
@@ -181,7 +181,7 @@ cat data/outbox/result-*.json
 **Configuration:** Remove from `application.properties`:
 
 ```properties
-# Remove: camel.main.durationMaxMessages=1
+# Remove: camel.main.durationMaxIdleSeconds=5
 ```
 
 ---
@@ -199,7 +199,7 @@ cat data/outbox/result-*.json
 2. Replace the console adapter route at the bottom with the HTTP adapter content
 3. Update the endpoint name (`direct:classify-leaf-node`)
 4. Add `camel.server.port=8080` to `application.properties`
-5. Remove `camel.main.durationMaxMessages=1` if present
+5. Remove `camel.main.durationMaxIdleSeconds=5` if present
 
 ---
 

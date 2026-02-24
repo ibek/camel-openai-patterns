@@ -1,0 +1,53 @@
+- route:
+    id: invoice-extraction
+    description: "Invoice Extract"
+    from:
+      description: invoice-extraction
+      uri: "direct:invoice-extraction"
+      steps:
+        - log:
+            description: "Log Invoice"
+            message: "Processing invoice: ${header.CamelFileName}"
+        - to:
+            description: "Convert PDF"
+            uri: "docling:CONVERT_TO_MARKDOWN"
+            parameters:
+              contentInBody: true
+              useAsyncMode: true
+        - setHeader:
+            description: "Set Prompt"
+            name: "CamelOpenAISystemMessage"
+            simple: |
+              You are a deterministic, high-precision data extraction API.
+              Your sole purpose is to extract invoice data from the provided Docling Markdown output and map it exactly to the target JSON schema.
+
+              CRITICAL INSTRUCTIONS:
+              1. NO CHAT: Output ONLY valid JSON.
+              2. STRICT SCHEMA: Your output must perfectly match the provided JSON schema.
+              3. NO HALLUCINATION: Extract only what is explicitly written in the source text. 
+              4. VALID LINE ITEMS ONLY: A valid line item MUST have a visible quantity greater than 0 and a valid unit price. NEVER generate items with a quantity of 0.
+              5. IGNORE FOOTERS: Do not treat "Subtotal", "Sales Tax", "Shipping", "Handling", or "Total Due" as line items. These belong ONLY in the `legalMonetaryTotal` object.
+              6. CONTINUITY: Line items may be split across multiple tables. Continue extracting valid rows until you reach the Subtotal/Totals section, then STOP extracting line items immediately.
+        - to:
+            description: "Extract JSON"
+            uri: "openai:chat-completion"
+            parameters:
+              temperature: 0.15
+              jsonSchema: "resource:classpath:invoice.schema.json"
+
+- route:
+    id: invoice-watch
+    description: "Invoice Watch"
+    from:
+      description: "invoices/*.pdf"
+      uri: file:invoices
+      parameters:
+        noop: true
+        include: ".*\\.pdf"
+      steps:
+        - to:
+            description: "Run Extract"
+            uri: "direct:invoice-extraction"
+        - to:
+            description: "Console Out"
+            uri: "stream:out"

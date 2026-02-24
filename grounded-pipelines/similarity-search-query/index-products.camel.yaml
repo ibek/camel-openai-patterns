@@ -1,0 +1,68 @@
+- route:
+    id: index-products
+    description: "Product Index"
+    from:
+      description: "Index Once"
+      uri: timer:indexer?repeatCount=1
+      steps:
+        - log:
+            description: "Load Products"
+            message: "Loading products..."
+        - setBody:
+            description: "Load File"
+            simple: "resource:classpath:products.json"
+        - unmarshal:
+            description: "Parse JSON"
+            json: {}
+        
+        # Process each product
+        - split:
+            description: "Split Items"
+            simple: "${body}"
+            steps:
+              - setVariable:
+                  description: "Save ID"
+                  name: productId
+                  simple: "${body[id]}"
+              - setVariable:
+                  description: "Save Name"
+                  name: productName
+                  simple: "${body[name]}"
+              - setVariable:
+                  description: "Save Category"
+                  name: productCategory
+                  simple: "${body[category]}"
+              - setVariable:
+                  description: "Save Brand"
+                  name: productBrand
+                  simple: "${body[brand]}"
+              - setVariable:
+                  description: "Save Price"
+                  name: productPrice
+                  simple: "${body[price]}"
+              - setVariable:
+                  description: "Save Details"
+                  name: productDescription
+                  simple: "${body[description]}"
+              - setBody:
+                  description: "Set Text"
+                  simple: "${body[name]}. ${body[description]}"
+              - to:
+                  description: "Get Embedding"
+                  uri: openai:embeddings
+              - setVariable:
+                  description: "Save Vector"
+                  name: productEmbedding
+                  simple: "${body.toString()}"
+              - to:
+                  description: "Insert DB"
+                  uri: |
+                    sql:INSERT INTO products (product_id, name, category, brand, price, description, embedding) 
+                    VALUES (:#productId, :#productName, :#productCategory, :#productBrand, :#productPrice, :#productDescription, :#productEmbedding::vector)
+              - log:
+                  description: "Log Indexed"
+                  message: "Indexed: ${variable.productName}"
+        
+        - log:
+            description: "Index Done"
+            message: "Product indexing complete"
