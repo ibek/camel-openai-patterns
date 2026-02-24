@@ -30,4 +30,4 @@ echo "How do I reset my password?" | camel run document-qa.camel.yaml applicatio
 echo "Our users are able to log in, but they are complaining about extremely slow synchronization speeds and unusually high CPU usage. We don't see any error codes. What network configuration might be causing this?" | camel run document-qa.camel.yaml application.properties
 ```
 
-To add your own documents, place `.txt` files in the `documents/` folder and re-run the indexing step.
+To add your own documents, place `.md` files in the `documents/` folder and re-run the indexing step.
