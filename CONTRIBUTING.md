@@ -20,7 +20,8 @@ Thank you for your interest in contributing! This project demonstrates architect
 ```bash
 export OPENAI_API_KEY=your-key-here
 export OPENAI_BASE_URL=http://localhost:11434/v1  # Example for Ollama
-export OPENAI_MODEL=ministral-3-8b
+export OPENAI_MODEL=granite4.2:8b
+export OPENAI_EMBEDDING_MODEL=nomic-embed-text    # needed by embedding-based examples
 ```
 
 3. Test an example:

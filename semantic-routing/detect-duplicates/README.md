@@ -1,10 +1,10 @@
-## Ticket Deduplication
+# Ticket Deduplication
 
 **The Goal:** Route tickets based on similarity — duplicates get linked, new ones get created.
 
 This extends Semantic Routing with **embeddings**. Instead of routing based on content classification, we route based on how similar the new content is to existing content. The route converts each ticket into a vector using `openai:embeddings`, searches for similar tickets using pgvector, and either links to an existing ticket or creates a new one.
 
-## Prerequisite
+## Prerequisites
 
 Start and initialize PostgreSQL with pgvector:
 ```

@@ -1,4 +1,4 @@
-## Quantitative Risk Scoring
+# Quantitative Risk Scoring
 
 **The Goal:** Turn feelings into integers.
 

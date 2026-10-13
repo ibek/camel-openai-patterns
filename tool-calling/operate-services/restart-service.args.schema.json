@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "description": "Short reason for the restart."
+    },
+    "service": {
+      "type": "string",
+      "description": "The service to restart.",
+      "enum": ["checkout-api", "payments-api", "inventory-db"]
+    }
+  },
+  "required": ["service"],
+  "additionalProperties": false
+}

@@ -1,0 +1,197 @@
+# Commerce tool server — the "mcp-gateway" side of the tool-calling boundary.
+# This service owns the data and the deterministic Camel logic. It has NO LLM.
+#
+# camel-mcp-server watches the AiToolRegistry and publishes every route tagged
+# "commerce" (see application.properties: camel.server.mcp.tags=commerce) as an
+# MCP tool over streamable HTTP at http://localhost:8080/mcp. No route is needed
+# for the server itself — tagging the ai-tool routes is the whole configuration.
+#
+# Compare with ../../operate-services, where the SAME kind of ai-tool routes are
+# consumed in-process ("no MCP server, no subprocess, no HTTP"). Here the tools
+# live in their own service and are called across a process boundary.
+
+# TOOL 1: check_inventory — read-only, no arguments.
+# Returns stock for EVERY product in one call, like a status API. This is why
+# "is anything out of stock?" is a single call, not one lookup per SKU. The
+# result flows back over MCP so the assistant's model can summarize it.
+- route:
+    id: tool-check-inventory
+    description: "Tool: check_inventory"
+    startupOrder: 1
+    from:
+      description: check_inventory
+      uri: "ai-tool:check_inventory"
+      parameters:
+        tags: commerce
+        description: "Return current stock for ALL products across every warehouse in one call."
+        readOnlyHint: true
+      steps:
+        - to: "direct:check-inventory"
+
+- route:
+    id: check-inventory-impl
+    description: "Impl: check inventory"
+    from:
+      description: check-inventory
+      uri: "direct:check-inventory"
+      steps:
+        - setBody:
+            description: "All Products Stock"
+            simple: >-
+              {"checkedAt":"${date:now:yyyy-MM-dd HH:mm:ss}","warehouses":["EU-1","US-1"],"products":[
+              {"sku":"SKU-HD-01","name":"Wireless Headphones","status":"IN_STOCK","onHand":42},
+              {"sku":"SKU-CBL-3","name":"USB-C Cable (3-pack)","status":"OUT_OF_STOCK","onHand":0},
+              {"sku":"SKU-DSK-9","name":"Standing Desk","status":"LOW","onHand":7}]}
+
+# TOOL 2: lookup_order — read-only. The high-value tool: the model turns a fuzzy
+# request ("where's my headphones order?") into a STRUCTURED call (a single
+# order_id) that an order-management backend can answer. The result flows back so
+# the model can summarize the status in plain language.
+- route:
+    id: tool-lookup-order
+    description: "Tool: lookup_order"
+    startupOrder: 2
+    from:
+      description: lookup_order
+      uri: "ai-tool:lookup_order"
+      parameters:
+        tags: commerce
+        description: "Look up a single order's status, item, and shipping by its order id."
+        readOnlyHint: true
+        argSchema: "classpath:lookup-order.args.schema.json"
+      steps:
+        - to: "direct:lookup-order"
+
+- route:
+    id: lookup-order-impl
+    description: "Impl: lookup order"
+    from:
+      description: lookup-order
+      uri: "direct:lookup-order"
+      steps:
+        - choice:
+            description: "Route by Order Id"
+            when:
+              - expression:
+                  simple: "${header.order_id} == 'ORD-1001'"
+                steps:
+                  - setBody:
+                      description: "ORD-1001"
+                      constant: '{"orderId":"ORD-1001","customer":"alice@example.com","status":"SHIPPED","item":"Wireless Headphones","qty":1,"total":"$129.00","carrier":"DHL","eta":"2026-09-27"}'
+              - expression:
+                  simple: "${header.order_id} == 'ORD-1002'"
+                steps:
+                  - setBody:
+                      description: "ORD-1002"
+                      constant: '{"orderId":"ORD-1002","customer":"bob@example.com","status":"PROCESSING","item":"USB-C Cable (3-pack)","qty":1,"total":"$59.90","carrier":null,"eta":"2026-09-30"}'
+              - expression:
+                  simple: "${header.order_id} == 'ORD-1003'"
+                steps:
+                  - setBody:
+                      description: "ORD-1003"
+                      constant: '{"orderId":"ORD-1003","customer":"carol@example.com","status":"DELAYED","item":"Standing Desk","qty":1,"total":"$340.00","carrier":"UPS","eta":"2026-10-05"}'
+            otherwise:
+              steps:
+                - setBody:
+                    description: "Not Found"
+                    simple: '{"orderId":"${header.order_id}","status":"NOT_FOUND"}'
+
+# TOOL 3: get_return_policy — read-only, returnDirect=true.
+# The policy text IS the answer and needs no interpretation, so the loop
+# short-circuits and returns it verbatim — even across MCP. The returnDirect
+# annotation travels ai-tool -> MCP -> the assistant's openai loop and is honoured
+# there, so the model round-trip is skipped just like in the in-process example.
+- route:
+    id: tool-get-return-policy
+    description: "Tool: get_return_policy"
+    startupOrder: 3
+    from:
+      description: get_return_policy
+      uri: "ai-tool:get_return_policy"
+      parameters:
+        tags: commerce
+        description: "Return the returns/refund policy for a region, verbatim."
+        readOnlyHint: true
+        returnDirect: true
+        argSchema: "classpath:get-return-policy.args.schema.json"
+      steps:
+        - to: "direct:get-return-policy"
+
+- route:
+    id: get-return-policy-impl
+    description: "Impl: get return policy"
+    from:
+      description: get-return-policy
+      uri: "direct:get-return-policy"
+      steps:
+        - choice:
+            description: "Route by Region"
+            when:
+              - expression:
+                  simple: "${header.region} == 'EU'"
+                steps:
+                  - setBody:
+                      description: "EU"
+                      constant: |
+                        RETURN POLICY — EU
+                        1. 14-day right of withdrawal, no reason required.
+                        2. Refunds go to the original payment method within 14 days of the return arriving.
+                        3. Return shipping is free for damaged or wrong items.
+              - expression:
+                  simple: "${header.region} == 'US'"
+                steps:
+                  - setBody:
+                      description: "US"
+                      constant: |
+                        RETURN POLICY — US
+                        1. 30-day returns for unused items in original packaging.
+                        2. Refunds issued within 5-7 business days after the item is received.
+                        3. A restocking fee may apply to opened electronics.
+              - expression:
+                  simple: "${header.region} == 'UK'"
+                steps:
+                  - setBody:
+                      description: "UK"
+                      constant: |
+                        RETURN POLICY — UK
+                        1. 14-day cancellation window under the Consumer Contracts Regulations.
+                        2. Faulty goods can be returned within 30 days for a full refund.
+                        3. A free returns label is provided for defective items.
+            otherwise:
+              steps:
+                - setBody:
+                    description: "No Policy"
+                    simple: "No return policy found for region ${header.region}."
+
+# TOOL 4: initiate_refund — MUTATING, destructiveHint=true.
+# The server publishes this tool over MCP, but the self-service assistant does NOT
+# expose it to its model (see the assistant's mcpServer.commerce.toolNames). This
+# is the two-layer governance the gateway makes possible: the server decides what
+# is publishable at all (tags), and each client decides what THAT consumer may see
+# (toolNames). A human-operated console could connect and use it; the self-service
+# bot cannot, no matter how it is prompted.
+- route:
+    id: tool-initiate-refund
+    description: "Tool: initiate_refund (published, excluded by the self-service assistant)"
+    startupOrder: 4
+    from:
+      description: initiate_refund
+      uri: "ai-tool:initiate_refund"
+      parameters:
+        tags: commerce
+        description: "Issue a refund for an order. Restricted to human-operated clients."
+        destructiveHint: true
+        argSchema: "classpath:initiate-refund.args.schema.json"
+      steps:
+        - to: "direct:initiate-refund"
+
+- route:
+    id: initiate-refund-impl
+    description: "Impl: initiate refund"
+    from:
+      description: initiate-refund
+      uri: "direct:initiate-refund"
+      steps:
+        - setBody:
+            description: "Refund Result"
+            simple: '{"orderId":"${header.order_id}","action":"refund","reason":"${header.reason}","result":"SUCCESS","refundedAt":"${date:now:yyyy-MM-dd HH:mm:ss}"}'

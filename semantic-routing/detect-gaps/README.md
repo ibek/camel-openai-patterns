@@ -1,4 +1,4 @@
-## Compliance Gap Analysis
+# Compliance Gap Analysis
 
 **The Goal:** Feed the system a contract and a checklist, and have it tell you exactly what is missing.
 

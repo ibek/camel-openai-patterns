@@ -1,4 +1,4 @@
-## Canonical Entity Resolution
+# Canonical Entity Resolution
 
 **The Goal:** Raw text + a whitelist → ID.
 

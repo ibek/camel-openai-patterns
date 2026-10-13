@@ -1,0 +1,66 @@
+# Self-service support assistant — the client side of the tool-calling boundary.
+# This service has NO tools and NO data access of its own. It runs the bounded
+# tool-call loop in camel-openai against the commerce tool server over MCP.
+#
+# It discovers the server's tools by connecting to http://localhost:8080/mcp, and
+# it narrows them further with toolNames: the destructive initiate_refund tool is
+# published by the server but deliberately kept out of this consumer's reach.
+- route:
+    id: self-service-assistant
+    description: "Self-service support assistant over MCP"
+    from:
+      description: self-service-assistant
+      uri: "direct:assistant"
+      steps:
+        - setHeader:
+            description: "Set System Prompt"
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              You are a self-service support assistant for an online store. You help
+              shoppers check their orders, product availability, and the returns policy
+              using ONLY the provided tools.
+
+              ### TOOL ROUTING RULES
+              * IF the user asks whether something is in stock, or about availability in general:
+                -> USE `check_inventory`. It returns every product in one call, so call it only once.
+
+              * IF the user asks about a specific order (status, shipping, ETA):
+                -> USE `lookup_order` with the order id (format ORD-XXXX).
+
+              * IF the user asks about returns or the refund policy ("can I return this?"):
+                -> USE `get_return_policy` with the customer's region (EU, US, or UK). Ask for the
+                   region only if the user has not made it clear.
+
+              ### GENERAL RULES
+              1. Rely entirely on tool results. Do not invent order ids, stock levels, or policies.
+              2. You CANNOT issue refunds or change an order — there is no tool for that here. If asked,
+                 explain that a human support agent must process refunds, and offer the returns policy.
+              3. Be concise: one or two plain sentences on top of the tool result.
+        - to:
+            description: "Run the bounded tool-call loop against the MCP tool server"
+            uri: "openai:chat-completion"
+            parameters:
+              # Connect to the commerce tool server over MCP streamable HTTP.
+              mcpServer.commerce.transportType: streamableHttp
+              mcpServer.commerce.url: http://localhost:8080/mcp
+              # Client-side allow-list: only these tools are visible to the model.
+              # initiate_refund is published by the server but intentionally omitted,
+              # so this bot cannot issue a refund no matter how it is prompted.
+              mcpServer.commerce.toolNames: check_inventory,lookup_order,get_return_policy
+              # Hard ceiling on how many tool-call passes the loop can take.
+              maxToolIterations: 5
+              temperature: 0.1
+
+- route:
+    id: console-adapter
+    description: "Console Adapter"
+    from:
+      description: stream-in
+      uri: stream:in
+      steps:
+        - to:
+            description: self-service-assistant
+            uri: direct:assistant
+        - to:
+            description: stream-out
+            uri: stream:out

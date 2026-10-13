@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string",
+      "description": "The service whose runbook to return.",
+      "enum": ["checkout-api", "payments-api", "inventory-db"]
+    }
+  },
+  "required": ["service"],
+  "additionalProperties": false
+}

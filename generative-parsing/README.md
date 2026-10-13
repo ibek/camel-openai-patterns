@@ -1,4 +1,4 @@
-## Generative Parsing (Structuring Data)
+# Generative Parsing (Structuring Data)
 
 Regex is fragile. We all know it.
 

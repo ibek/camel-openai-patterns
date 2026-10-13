@@ -1,4 +1,4 @@
-## PII Redaction
+# PII Redaction
 
 **The Goal:** Identify and mask personally identifiable information (PII)
 

@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string",
+      "description": "The service to query.",
+      "enum": ["checkout-api", "payments-api", "inventory-db"]
+    },
+    "metric": {
+      "type": "string",
+      "description": "Which metric to pull.",
+      "enum": ["error_rate", "latency_p99", "cpu", "request_rate"]
+    },
+    "window": {
+      "type": "string",
+      "description": "Lookback window, e.g. 15m, 1h, 24h. Use 1h if the user does not specify."
+    }
+  },
+  "required": ["service", "metric", "window"],
+  "additionalProperties": false
+}

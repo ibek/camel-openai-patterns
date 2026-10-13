@@ -1,4 +1,4 @@
-## Leaf-Node Classification
+# Leaf-Node Classification
 
 **The Goal:** Map content into a deep tree, not just loose keywords.
 

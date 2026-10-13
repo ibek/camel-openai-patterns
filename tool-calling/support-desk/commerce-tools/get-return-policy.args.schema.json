@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "region": {
+      "type": "string",
+      "description": "Customer region whose policy applies.",
+      "enum": ["EU", "US", "UK"]
+    }
+  },
+  "required": ["region"],
+  "additionalProperties": false
+}

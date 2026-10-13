@@ -1,0 +1,281 @@
+# Tool calling: the LLM picks and fills a tool, the ai-tool routes do the deterministic work.
+# This is NOT an autonomous agent — it is a single request with a bounded tool-call loop.
+- route:
+    id: operate-services
+    description: "SRE tool calling"
+    from:
+      description: operate-services
+      uri: "direct:operate-services"
+      steps:
+        - setHeader:
+            description: "Set System Prompt"
+            name: "CamelOpenAISystemMessage"
+            simple: >
+              You are an SRE assistant for a small platform team. You help engineers observe and recover services using ONLY the provided tools.
+
+              ### TOOL ROUTING RULES
+              You must follow these strict IF/THEN rules for choosing tools:
+
+              * IF the user asks about the overall system, "what is broken", or general health:
+                -> USE `get_service_health`.
+                -> DO NOT use this tool if the user is asking about one specific service.
+
+              * IF the user asks for a specific metric (e.g., error rate, latency, CPU) for ONE specific service:
+                -> USE `query_metric`.
+                -> Default to a `1h` window if none is specified.
+                -> You are permitted to format the user's requested metric into snake_case (e.g., "error rate" -> "error_rate") for the tool call. This does NOT count as inventing a metric.
+
+              * IF the user explicitly asks to restart, fix, or recover a specific service:
+                -> USE `restart_service`.
+                -> After calling, confirm the outcome to the user in 1-2 plain sentences.
+
+              * IF the user asks for remediation steps, guides, or a runbook for a service:
+                -> USE `get_runbook`.
+
+              ### GENERAL RULES
+              1. Be efficient: Use the single best tool for the job. Do not chain tools unnecessarily.
+              2. Rely entirely on tool results. Do not hallucinate or invent service names, metrics, or server statuses outside of what the tools return.
+        - to:
+            description: "Run the bounded tool-call loop"
+            uri: "openai:chat-completion"
+            parameters:
+              # tags = which tools the model is even allowed to see
+              tags: devops
+              # maxToolIterations = hard ceiling on how many tool-call passes the loop can take
+              maxToolIterations: 5
+              temperature: 0.1
+
+# The console adapter (stream:in -> stream:out), same as the other patterns.
+- route:
+    id: console-adapter
+    description: "Console Adapter"
+    from:
+      description: stream-in
+      uri: stream:in
+      steps:
+        - to:
+            description: operate-services
+            uri: direct:operate-services
+        - to:
+            description: stream-out
+            uri: stream:out
+
+# TOOL 1: get_service_health — read-only, no arguments.
+# Returns the status of EVERY service in a single call, like a status API or a
+# Prometheus alert summary. This is why "are all services healthy?" is one call,
+# not one-per-service polling. The result flows back so the model can summarize it.
+- route:
+    id: tool-get-service-health
+    description: "Tool: get_service_health"
+    startupOrder: 1
+    from:
+      description: get_service_health
+      uri: "ai-tool:get_service_health"
+      parameters:
+        tags: devops
+        description: "Return the current health of ALL platform services in one call."
+        readOnlyHint: true
+      steps:
+        - to: "direct:service-health"
+
+- route:
+    id: service-health-impl
+    description: "Impl: service health"
+    from:
+      description: service-health
+      uri: "direct:service-health"
+      steps:
+        - setBody:
+            description: "All Services Status"
+            simple: >-
+              {"checkedAt":"${date:now:yyyy-MM-dd HH:mm:ss}","services":[
+              {"service":"checkout-api","status":"HEALTHY"},
+              {"service":"payments-api","status":"DEGRADED"},
+              {"service":"inventory-db","status":"DOWN"}]}
+
+# TOOL 2: query_metric — read-only. The high-value tool: the model translates a
+# fuzzy request ("why is payments slow lately?") into a STRUCTURED query
+# (service + metric + window) that a metrics backend can answer.
+- route:
+    id: tool-query-metric
+    description: "Tool: query_metric"
+    startupOrder: 2
+    from:
+      description: query_metric
+      uri: "ai-tool:query_metric"
+      parameters:
+        tags: devops
+        description: "Query a single metric for one service over a time window (like a PromQL query)."
+        readOnlyHint: true
+        argSchema: "classpath:query-metric.args.schema.json"
+      steps:
+        - to: "direct:query-metric"
+
+- route:
+    id: query-metric-impl
+    description: "Impl: query metric"
+    from:
+      description: query-metric
+      uri: "direct:query-metric"
+      steps:
+        # The per-service error_rate lookup is extracted into direct:query-error-rate
+        # so this choice stays flat (one level) and reads cleanly in Kaoto.
+        - choice:
+            description: "Route by Metric"
+            when:
+              - expression:
+                  simple: "${header.metric} == 'error_rate'"
+                steps:
+                  - to:
+                      description: "Error Rate by Service"
+                      uri: "direct:query-error-rate"
+              - expression:
+                  simple: "${header.metric} == 'latency_p99'"
+                steps:
+                  - setBody:
+                      description: "Latency p99"
+                      simple: '{"service":"${header.service}","metric":"latency_p99","window":"${header.window}","value":"312ms","trend":"flat"}'
+              - expression:
+                  simple: "${header.metric} == 'cpu'"
+                steps:
+                  - setBody:
+                      description: "CPU"
+                      simple: '{"service":"${header.service}","metric":"cpu","window":"${header.window}","value":"63%","trend":"flat"}'
+              - expression:
+                  simple: "${header.metric} == 'request_rate'"
+                steps:
+                  - setBody:
+                      description: "Request Rate"
+                      simple: '{"service":"${header.service}","metric":"request_rate","window":"${header.window}","value":"1240 req/s","trend":"flat"}'
+            otherwise:
+              steps:
+                - setBody:
+                    description: "Unknown Metric"
+                    simple: '{"service":"${header.service}","metric":"${header.metric}","value":"UNKNOWN_METRIC"}'
+
+- route:
+    id: query-error-rate-impl
+    description: "Impl: error rate by service"
+    from:
+      description: query-error-rate
+      uri: "direct:query-error-rate"
+      steps:
+        - choice:
+            description: "Route by Service"
+            when:
+              - expression:
+                  simple: "${header.service} == 'checkout-api'"
+                steps:
+                  - setBody:
+                      description: "checkout-api"
+                      simple: '{"service":"checkout-api","metric":"error_rate","window":"${header.window}","value":"0.1%","trend":"flat"}'
+              - expression:
+                  simple: "${header.service} == 'payments-api'"
+                steps:
+                  - setBody:
+                      description: "payments-api"
+                      simple: '{"service":"payments-api","metric":"error_rate","window":"${header.window}","value":"7.2%","trend":"rising"}'
+              - expression:
+                  simple: "${header.service} == 'inventory-db'"
+                steps:
+                  - setBody:
+                      description: "inventory-db"
+                      simple: '{"service":"inventory-db","metric":"error_rate","window":"${header.window}","value":"100%","trend":"spiking"}'
+            otherwise:
+              steps:
+                - setBody:
+                    description: "Unknown Service"
+                    simple: '{"service":"${header.service}","metric":"error_rate","value":"N/A"}'
+
+# TOOL 3: restart_service — mutating, normal loop.
+# The result flows back to the model so it can confirm the outcome in prose.
+- route:
+    id: tool-restart-service
+    description: "Tool: restart_service"
+    startupOrder: 3
+    from:
+      description: restart_service
+      uri: "ai-tool:restart_service"
+      parameters:
+        tags: devops
+        description: "Restart a platform service to recover it from a degraded or down state."
+        destructiveHint: true
+        argSchema: "classpath:restart-service.args.schema.json"
+      steps:
+        - to: "direct:restart-service"
+
+- route:
+    id: restart-service-impl
+    description: "Impl: restart service"
+    from:
+      description: restart-service
+      uri: "direct:restart-service"
+      steps:
+        - setBody:
+            description: "Restart Result"
+            simple: '{"service":"${header.service}","action":"restart","result":"SUCCESS","newStatus":"HEALTHY","restartedAt":"${date:now:yyyy-MM-dd HH:mm:ss}"}'
+
+# TOOL 4: get_runbook — read-only, returnDirect=true.
+# The runbook text IS the answer and needs no interpretation, so the component
+# short-circuits the loop and returns it verbatim (no final model round-trip).
+- route:
+    id: tool-get-runbook
+    description: "Tool: get_runbook"
+    startupOrder: 4
+    from:
+      description: get_runbook
+      uri: "ai-tool:get_runbook"
+      parameters:
+        tags: devops
+        description: "Return the remediation runbook for a service, verbatim."
+        readOnlyHint: true
+        returnDirect: true
+        argSchema: "classpath:get-runbook.args.schema.json"
+      steps:
+        - to: "direct:get-runbook"
+
+- route:
+    id: get-runbook-impl
+    description: "Impl: get runbook"
+    from:
+      description: get-runbook
+      uri: "direct:get-runbook"
+      steps:
+        - choice:
+            description: "Route by Service"
+            when:
+              - expression:
+                  simple: "${header.service} == 'checkout-api'"
+                steps:
+                  - setBody:
+                      description: "checkout-api"
+                      constant: |
+                        RUNBOOK — checkout-api
+                        1. Check upstream cart-service health.
+                        2. Scale the deployment to 3 replicas.
+                        3. If 5xx persists, roll back to the last green image.
+              - expression:
+                  simple: "${header.service} == 'payments-api'"
+                steps:
+                  - setBody:
+                      description: "payments-api"
+                      constant: |
+                        RUNBOOK — payments-api
+                        1. Verify the payment gateway credentials are not expired.
+                        2. Drain in-flight transactions before restarting.
+                        3. Restart the service, then confirm the 5xx rate drops below 1%.
+              - expression:
+                  simple: "${header.service} == 'inventory-db'"
+                steps:
+                  - setBody:
+                      description: "inventory-db"
+                      constant: |
+                        RUNBOOK — inventory-db
+                        1. Check disk space and connection pool saturation.
+                        2. Fail over to the read replica if the primary is unreachable.
+                        3. Restart the primary and re-run the connection health check.
+            otherwise:
+              steps:
+                - setBody:
+                    description: "No Runbook"
+                    simple: "No runbook found for ${header.service}."

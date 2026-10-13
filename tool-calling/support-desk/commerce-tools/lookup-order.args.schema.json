@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "The order to look up.",
+      "enum": ["ORD-1001", "ORD-1002", "ORD-1003"]
+    }
+  },
+  "required": ["order_id"],
+  "additionalProperties": false
+}

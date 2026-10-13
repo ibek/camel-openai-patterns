@@ -1,4 +1,4 @@
-## Grounded Pipelines (Contextual Integrity)
+# Grounded Pipelines (Contextual Integrity)
 
 **Grounded Pipelines** treat the LLM as an *untrusted* component inside a trusted integration flow. The model can help interpret intent and write natural-language responses, but it must do so using **bounded inputs** (schemas, retrieved context, search results) rather than “whatever it remembers.”
 
@@ -25,5 +25,15 @@ Most grounded pipelines follow the same shape:
 ## How to Extend This Pattern
 
 - **Tune retrieval**: adjust `topK`, similarity thresholds, and chunking rules.
+- **Swap the source of truth**: point the retrieve/execute step at a different DB, index, or search API without touching the interpret/compose steps.
+- **Add an evidence check**: before composing, verify the retrieved rows/chunks actually support the question — and refuse when they don't.
+- **Harden the query layer**: keep allowlisted filters and bind parameters so the model's output can never widen access.
+- **Log the evidence**: persist the retrieved context alongside the answer so every response is auditable.
 
+## Examples
 
+| Example | What It Does |
+|---------|-------------|
+| [database-query](database-query/) | "Air-gaps" the DB — the LLM shapes **filters**, trusted code runs the **SQL** |
+| [document-qa](document-qa/) | Core **RAG** Q&A over pgvector; **refuses** when no relevant chunks are found |
+| [similarity-search-query](similarity-search-query/) | Finds products by **meaning** via vector similarity, not exact filters |

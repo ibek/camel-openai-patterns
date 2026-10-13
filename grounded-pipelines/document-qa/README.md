@@ -1,10 +1,10 @@
-## Document Q&A
+# Document Q&A
 
 **The Goal:** Answer questions using only retrieved document context.
 
 This is the core **RAG** (Retrieval-Augmented Generation) pattern implemented as a Grounded Pipeline. The user's question is converted to a vector, relevant document chunks are retrieved via pgvector similarity search, and the LLM produces an answer grounded only in the retrieved content. If no relevant chunks are found, the system explicitly says it doesn't have the information rather than hallucinating.
 
-## Prerequisite
+## Prerequisites
 
 Start and initialize PostgreSQL with pgvector:
 ```

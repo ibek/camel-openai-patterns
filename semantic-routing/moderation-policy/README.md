@@ -1,4 +1,4 @@
-## Content Moderation
+# Content Moderation
 
 **The Goal:** Filter content based on *your* rules, not generic OpenAI defaults.
 

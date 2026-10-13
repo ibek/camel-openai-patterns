@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "The order to refund.",
+      "enum": ["ORD-1001", "ORD-1002", "ORD-1003"]
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why the refund is issued.",
+      "enum": ["damaged", "wrong_item", "no_longer_needed", "late_delivery"]
+    }
+  },
+  "required": ["order_id", "reason"],
+  "additionalProperties": false
+}
